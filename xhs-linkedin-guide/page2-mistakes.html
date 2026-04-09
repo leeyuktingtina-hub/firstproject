@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 1242px;
+  height: 1660px;
+  overflow: hidden;
+}
+body {
+  background: #FFFFFF;
+  font-family: 'Noto Sans SC', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: #111111;
+  position: relative;
+}
+.page {
+  width: 1242px;
+  height: 1660px;
+  padding: 100px 110px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Top meta row */
+.top-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 72px;
+}
+.page-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #CCCCCC;
+  letter-spacing: 3px;
+}
+
+/* Title block */
+.title-block {
+  margin-bottom: 56px;
+}
+.accent-bar {
+  width: 56px;
+  height: 6px;
+  background: #1F3A5F;
+  margin-bottom: 44px;
+}
+.page-title {
+  font-size: 68px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #111111;
+  letter-spacing: -1px;
+}
+
+/* Sentence cards */
+.cards-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  margin-bottom: 0;
+}
+.sentence-card {
+  background: #EAEAEA;
+  border-radius: 10px;
+  padding: 44px 52px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.card-quote {
+  width: 5px;
+  height: 44px;
+  background: #BBBBBB;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.card-text {
+  font-family: 'Inter', monospace, sans-serif;
+  font-size: 38px;
+  font-weight: 500;
+  color: #444444;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+}
+
+/* Bottom summary */
+.summary-block {
+  margin-top: 64px;
+  padding-top: 52px;
+  border-top: 1px solid #EAEAEA;
+}
+.summary-line1 {
+  font-size: 44px;
+  font-weight: 400;
+  color: #666666;
+  line-height: 1.5;
+}
+.summary-line2 {
+  font-size: 48px;
+  font-weight: 800;
+  color: #1F3A5F;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top: page number -->
+  <div class="top-row">
+    <span class="page-num">02 / 05</span>
+  </div>
+
+  <!-- Title -->
+  <div class="title-block">
+    <div class="accent-bar"></div>
+    <div class="page-title">很多企业主页都在写这几句：</div>
+  </div>
+
+  <!-- Sentence cards -->
+  <div class="cards-block">
+    <div class="sentence-card">
+      <div class="card-quote"></div>
+      <div class="card-text">We are professional manufacturer</div>
+    </div>
+    <div class="sentence-card">
+      <div class="card-quote"></div>
+      <div class="card-text">High quality and good service</div>
+    </div>
+    <div class="sentence-card">
+      <div class="card-quote"></div>
+      <div class="card-text">Welcome to contact us</div>
+    </div>
+  </div>
+
+  <!-- Bottom summary -->
+  <div class="summary-block">
+    <div class="summary-line1">这些句子没错，</div>
+    <div class="summary-line2">但谁都可以这么写。</div>
+  </div>
+
+</div>
+</body>
+</html>

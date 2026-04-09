@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 1242px;
+  height: 1660px;
+  overflow: hidden;
+}
+body {
+  background: #FFFFFF;
+  font-family: 'Noto Sans SC', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: #111111;
+  position: relative;
+}
+.page {
+  width: 1242px;
+  height: 1660px;
+  padding: 100px 110px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Top meta row */
+.top-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 72px;
+}
+.page-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #CCCCCC;
+  letter-spacing: 3px;
+}
+
+/* Title block */
+.title-block {
+  margin-bottom: 60px;
+}
+.accent-bar {
+  width: 56px;
+  height: 6px;
+  background: #1F3A5F;
+  margin-bottom: 44px;
+}
+.title-line {
+  font-size: 76px;
+  font-weight: 900;
+  line-height: 1.18;
+  color: #111111;
+  letter-spacing: -1.5px;
+  display: block;
+}
+.title-line + .title-line {
+  margin-top: 4px;
+}
+.accent { color: #1F3A5F; }
+
+/* Lead sentence */
+.lead-block {
+  margin-bottom: 52px;
+  padding-bottom: 52px;
+  border-bottom: 1px solid #EAEAEA;
+}
+.lead-text {
+  font-size: 42px;
+  font-weight: 400;
+  color: #666666;
+  line-height: 1.5;
+}
+
+/* Numbered items */
+.items-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+}
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.num-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #1F3A5F;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.item-text {
+  font-size: 50px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+/* Subtle right-side decoration */
+.deco-line {
+  position: absolute;
+  right: 110px;
+  bottom: 160px;
+  width: 1px;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent, #EAEAEA, transparent);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top: page number -->
+  <div class="top-row">
+    <span class="page-num">03 / 05</span>
+  </div>
+
+  <!-- Title -->
+  <div class="title-block">
+    <div class="accent-bar"></div>
+    <span class="title-line">真正的问题不是英文</span>
+    <span class="title-line">而是表达没有<span class="accent">价值感</span></span>
+  </div>
+
+  <!-- Lead sentence -->
+  <div class="lead-block">
+    <div class="lead-text">海外客户更想看到的是：</div>
+  </div>
+
+  <!-- 4 numbered items -->
+  <div class="items-list">
+    <div class="item-row">
+      <div class="num-circle">1</div>
+      <div class="item-text">你服务谁</div>
+    </div>
+    <div class="item-row">
+      <div class="num-circle">2</div>
+      <div class="item-text">你解决什么问题</div>
+    </div>
+    <div class="item-row">
+      <div class="num-circle">3</div>
+      <div class="item-text">你有什么不同</div>
+    </div>
+    <div class="item-row">
+      <div class="num-circle">4</div>
+      <div class="item-text">为什么值得信任</div>
+    </div>
+  </div>
+
+  <!-- Subtle decoration -->
+  <div class="deco-line"></div>
+
+</div>
+</body>
+</html>

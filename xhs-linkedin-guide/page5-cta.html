@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 1242px;
+  height: 1660px;
+  overflow: hidden;
+}
+body {
+  background: #FFFFFF;
+  font-family: 'Noto Sans SC', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: #111111;
+  position: relative;
+}
+.page {
+  width: 1242px;
+  height: 1660px;
+  padding: 100px 110px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Top meta row */
+.top-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 72px;
+}
+.page-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #CCCCCC;
+  letter-spacing: 3px;
+}
+
+/* Title block */
+.title-block {
+  margin-bottom: 60px;
+}
+.accent-bar {
+  width: 56px;
+  height: 6px;
+  background: #1F3A5F;
+  margin-bottom: 44px;
+}
+.title-line {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1.18;
+  color: #111111;
+  letter-spacing: -1px;
+  display: block;
+}
+.title-line + .title-line {
+  margin-top: 4px;
+}
+
+/* Middle content */
+.content-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lead-text {
+  font-size: 40px;
+  font-weight: 500;
+  color: #666666;
+  line-height: 1.5;
+  margin-bottom: 44px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+/* Bullet items */
+.bullets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-bottom: 72px;
+}
+.bullet-row {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.bullet-dash {
+  width: 28px;
+  height: 3px;
+  background: #1F3A5F;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.bullet-text {
+  font-size: 46px;
+  font-weight: 600;
+  color: #222222;
+  line-height: 1.4;
+  letter-spacing: -0.3px;
+}
+
+/* CTA box */
+.cta-box {
+  background: #1F3A5F;
+  border-radius: 14px;
+  padding: 56px 64px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.cta-inner {
+  width: 100%;
+}
+.cta-label {
+  font-size: 26px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.cta-keyword-row {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+.cta-prefix {
+  font-size: 38px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+.cta-keyword {
+  font-family: 'Inter', sans-serif;
+  font-size: 80px;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+/* Small corner label */
+.corner-tag {
+  position: absolute;
+  bottom: 56px;
+  right: 110px;
+  font-size: 22px;
+  color: #CCCCCC;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top: page number -->
+  <div class="top-row">
+    <span class="page-num">05 / 05</span>
+  </div>
+
+  <!-- Title -->
+  <div class="title-block">
+    <div class="accent-bar"></div>
+    <span class="title-line">如果你是做出海业务的</span>
+    <span class="title-line">我可以免费帮你看一次英文主页</span>
+  </div>
+
+  <!-- Content block -->
+  <div class="content-block">
+
+    <div class="lead-text">我会先给你 3 个建议：</div>
+
+    <div class="bullets-list">
+      <div class="bullet-row">
+        <div class="bullet-dash"></div>
+        <div class="bullet-text">主页定位问题</div>
+      </div>
+      <div class="bullet-row">
+        <div class="bullet-dash"></div>
+        <div class="bullet-text">最适合发的内容方向</div>
+      </div>
+      <div class="bullet-row">
+        <div class="bullet-dash"></div>
+        <div class="bullet-text">最该改的一句英文表达</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <div class="cta-inner">
+        <div class="cta-label">私信关键词</div>
+        <div class="cta-keyword-row">
+          <div class="cta-keyword">audit</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Corner label -->
+  <div class="corner-tag">出海英文表达优化</div>
+
+</div>
+</body>
+</html>

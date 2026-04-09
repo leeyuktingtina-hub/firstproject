@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn 小红书笔记 - 5页预览</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #D4D4D4;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  font-family: sans-serif;
+}
+.label {
+  color: #555;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: -20px;
+  font-weight: 600;
+}
+.frame-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+iframe {
+  width: 1242px;
+  height: 1660px;
+  border: none;
+  transform-origin: top center;
+  transform: scale(0.42);
+  margin-bottom: calc((1660px * 0.42) - 1660px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+h1 {
+  color: #333;
+  font-size: 18px;
+  letter-spacing: 2px;
+  padding: 20px 0 0;
+}
+.export-note {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px 32px;
+  max-width: 600px;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.7;
+  text-align: left;
+}
+.export-note strong { color: #1F3A5F; }
+</style>
+</head>
+<body>
+
+<h1>小红书 LinkedIn 图文笔记 — 5 页预览</h1>
+
+<div class="export-note">
+  <strong>导出为图片的方式：</strong><br>
+  1. 在浏览器中打开单页 HTML 文件（如 page1-cover.html）<br>
+  2. 缩放设置为 100%（实际像素 1242×1660）<br>
+  3. 使用截图工具或浏览器打印 → 另存为 PDF → 导出图片<br>
+  4. 推荐工具：Puppeteer、Chrome DevTools 截图、或 Figma 粘贴 HTML
+</div>
+
+<div class="frame-wrap">
+  <div class="label">PAGE 01 — 封面</div>
+  <iframe src="page1-cover.html"></iframe>
+</div>
+
+<div class="frame-wrap">
+  <div class="label">PAGE 02 — 常见错误</div>
+  <iframe src="page2-mistakes.html"></iframe>
+</div>
+
+<div class="frame-wrap">
+  <div class="label">PAGE 03 — 问题本质</div>
+  <iframe src="page3-problem.html"></iframe>
+</div>
+
+<div class="frame-wrap">
+  <div class="label">PAGE 04 — 改写示范</div>
+  <iframe src="page4-rewrite.html"></iframe>
+</div>
+
+<div class="frame-wrap">
+  <div class="label">PAGE 05 — CTA 引导</div>
+  <iframe src="page5-cta.html"></iframe>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 1242px;
+  height: 1660px;
+  overflow: hidden;
+}
+body {
+  background: #FFFFFF;
+  font-family: 'Noto Sans SC', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: #111111;
+  position: relative;
+}
+.page {
+  width: 1242px;
+  height: 1660px;
+  padding: 100px 110px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Top meta row */
+.top-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 72px;
+}
+.page-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #CCCCCC;
+  letter-spacing: 3px;
+}
+
+/* Title block */
+.title-block {
+  margin-bottom: 60px;
+}
+.accent-bar {
+  width: 56px;
+  height: 6px;
+  background: #1F3A5F;
+  margin-bottom: 44px;
+}
+.page-title {
+  font-size: 68px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #111111;
+  letter-spacing: -1px;
+}
+
+/* Comparison blocks */
+.comparison-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 36px;
+}
+
+/* Arrow connector */
+.arrow-connector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 8px;
+}
+.arrow-line {
+  flex: 1;
+  height: 1px;
+  background: #DDDDDD;
+}
+.arrow-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #BBBBBB;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Before box */
+.before-box {
+  background: #F2F2F2;
+  border-radius: 12px;
+  padding: 52px 56px;
+}
+.box-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.before-box .box-label {
+  color: #999999;
+}
+.before-box .box-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 34px;
+  font-weight: 400;
+  color: #666666;
+  line-height: 1.65;
+  letter-spacing: 0.2px;
+}
+
+/* After box */
+.after-box {
+  background: #EDF2F8;
+  border-radius: 12px;
+  border-left: 6px solid #1F3A5F;
+  padding: 52px 56px;
+}
+.after-box .box-label {
+  color: #1F3A5F;
+}
+.after-box .box-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 34px;
+  font-weight: 500;
+  color: #1F3A5F;
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+}
+
+/* Bottom summary */
+.summary-block {
+  margin-top: 52px;
+  padding-top: 44px;
+  border-top: 1px solid #EAEAEA;
+}
+.summary-text {
+  font-size: 40px;
+  font-weight: 500;
+  color: #444444;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Top: page number -->
+  <div class="top-row">
+    <span class="page-num">04 / 05</span>
+  </div>
+
+  <!-- Title -->
+  <div class="title-block">
+    <div class="accent-bar"></div>
+    <div class="page-title">同一句话，改写前后差别很大</div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="comparison-block">
+
+    <!-- Before -->
+    <div class="before-box">
+      <div class="box-label">Before</div>
+      <div class="box-text">
+        We are a professional manufacturer with high quality products and good service.
+      </div>
+    </div>
+
+    <!-- Arrow connector -->
+    <div class="arrow-connector">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">改写</div>
+      <div class="arrow-line"></div>
+    </div>
+
+    <!-- After -->
+    <div class="after-box">
+      <div class="box-label">After</div>
+      <div class="box-text">
+        We help overseas buyers reduce supplier uncertainty through clearer project communication, faster sample coordination, and more transparent production updates.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom summary -->
+  <div class="summary-block">
+    <div class="summary-text">后者更容易让客户理解你的价值。</div>
+  </div>
+
+</div>
+</body>
+</html>
