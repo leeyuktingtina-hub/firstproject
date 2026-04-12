@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Hedge Fund — Multi-Agent Trading Analysis</title>
+<style>
+  :root {
+    --bg:      #0d1117;
+    --surface: #161b22;
+    --border:  #30363d;
+    --green:   #3fb950;
+    --green-d: #1a3a24;
+    --cyan:    #58a6ff;
+    --red:     #f85149;
+    --yellow:  #e3b341;
+    --purple:  #bc8cff;
+    --text:    #e6edf3;
+    --muted:   #8b949e;
+    --radius:  10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  header h1 span { color: var(--green); }
+  .back-link {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: .15s;
+  }
+  .back-link:hover { color: var(--cyan); border-color: var(--cyan); }
+  .badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px;
+    background: var(--green-d); color: var(--green); border: 1px solid var(--green);
+  }
+
+  /* ── Layout ── */
+  .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+  /* ── Setup warning ── */
+  .setup-warning {
+    background: #2d1a00;
+    border: 1px solid var(--yellow);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    color: var(--yellow);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .setup-warning code {
+    background: #1a1000; border: 1px solid var(--yellow);
+    border-radius: 4px; padding: 2px 6px; font-family: monospace;
+  }
+
+  /* ── Form card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; color: var(--muted); }
+  .form-group input, .form-group select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+    font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--cyan); }
+
+  /* ── Analyst grid ── */
+  .analysts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+  }
+  .analyst-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .analyst-card:hover { border-color: var(--cyan); background: #1a2030; }
+  .analyst-card.selected { border-color: var(--green); background: var(--green-d); }
+  .analyst-card .icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .analyst-card .info .name { font-size: 13px; font-weight: 600; }
+  .analyst-card .info .style { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .analyst-card input[type=checkbox] { display: none; }
+
+  .select-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .select-row button {
+    font-size: 12px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+    background: none; color: var(--muted); border: 1px solid var(--border);
+    transition: .15s;
+  }
+  .select-row button:hover { color: var(--green); border-color: var(--green); }
+
+  /* ── Run button ── */
+  #run-btn {
+    width: 100%; padding: 13px;
+    background: var(--green); color: #000;
+    border: none; border-radius: var(--radius);
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s, transform .1s;
+    letter-spacing: .02em;
+  }
+  #run-btn:hover   { opacity: .88; }
+  #run-btn:active  { transform: scale(.99); }
+  #run-btn:disabled { opacity: .4; cursor: default; }
+
+  /* ── Status bar ── */
+  #status-bar {
+    display: none;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px; color: var(--cyan);
+    align-items: center; gap: 12px;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Results section ── */
+  #results { display: none; }
+  .results-header {
+    font-size: 18px; font-weight: 700; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Signals grid */
+  .signals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .signal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+  .signal-card.bullish  { border-left: 3px solid var(--green); }
+  .signal-card.bearish  { border-left: 3px solid var(--red); }
+  .signal-card.neutral  { border-left: 3px solid var(--yellow); }
+
+  .sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sc-icon  { font-size: 18px; }
+  .sc-name  { font-size: 13px; font-weight: 600; flex: 1; }
+  .sc-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
+  }
+  .sc-badge.bullish { background: var(--green-d); color: var(--green); border: 1px solid var(--green); }
+  .sc-badge.bearish { background: #2d1a1a; color: var(--red); border: 1px solid var(--red); }
+  .sc-badge.neutral { background: #2a2200; color: var(--yellow); border: 1px solid var(--yellow); }
+
+  .confidence-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .conf-label { font-size: 11px; color: var(--muted); width: 80px; flex-shrink: 0; }
+  .conf-bar { flex: 1; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+  .conf-fill.bullish { background: var(--green); }
+  .conf-fill.bearish { background: var(--red); }
+  .conf-fill.neutral { background: var(--yellow); }
+  .conf-pct { font-size: 12px; font-weight: 600; width: 36px; text-align: right; flex-shrink: 0; }
+
+  .sc-ticker { font-size: 11px; color: var(--cyan); font-family: monospace; margin-bottom: 6px; }
+  .sc-reasoning {
+    font-size: 12px; color: var(--muted); line-height: 1.55;
+    border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px;
+  }
+
+  /* Decisions table */
+  .decisions-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .decisions-title {
+    padding: 14px 18px;
+    font-size: 14px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: #21262d;
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .07em;
+    color: var(--muted);
+  }
+  td {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  tr:hover td { background: #21262d44; }
+
+  .action-buy   { color: var(--green); font-weight: 700; }
+  .action-sell  { color: var(--red);   font-weight: 700; }
+  .action-short { color: var(--purple);font-weight: 700; }
+  .action-cover { color: var(--cyan);  font-weight: 700; }
+  .action-hold  { color: var(--muted); font-weight: 700; }
+
+  /* Ticker tabs */
+  .ticker-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .tab-btn {
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-family: monospace; font-weight: 600;
+    border: 1px solid var(--border); background: none; color: var(--text);
+    transition: .15s;
+  }
+  .tab-btn.active { background: var(--green-d); border-color: var(--green); color: var(--green); }
+  .tab-btn:hover:not(.active) { border-color: var(--cyan); color: var(--cyan); }
+
+  /* Error */
+  .error-box {
+    background: #2d1a1a; border: 1px solid var(--red);
+    border-radius: var(--radius); padding: 14px 18px;
+    color: var(--red); font-size: 13px; white-space: pre-wrap;
+  }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .analysts-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:22px">🏦</span>
+  <h1>AI <span>Hedge Fund</span> Agent</h1>
+  <span class="badge">19 Analysts</span>
+  <a href="/" class="back-link">← Chat</a>
+</header>
+
+<div class="page">
+
+  {% if not source_ready %}
+  <div class="setup-warning">
+    ⚠️ <strong>One-time setup required.</strong> The ai-hedge-fund source hasn't been downloaded yet.<br>
+    Open a terminal in the project folder and run:<br><br>
+    <code>bash setup_hedge_fund.sh</code><br><br>
+    Then restart this server. This clones the 19-agent system and patches it to use free market data.
+  </div>
+  {% endif %}
+
+  <!-- ── Configuration ── -->
+  <div class="card">
+    <div class="card-title">📋 Analysis Configuration</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column: span 2">
+        <label>Stock Tickers (comma-separated)</label>
+        <input id="tickers" type="text" placeholder="NVDA, MSFT, AMD, GOOGL" value="NVDA, MSFT">
+      </div>
+      <div class="form-group">
+        <label>Analysis Start Date</label>
+        <input id="start-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Analysis End Date</label>
+        <input id="end-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Virtual Portfolio Cash ($)</label>
+        <input id="initial-cash" type="number" value="100000" min="1000" step="1000">
+      </div>
+      <div class="form-group">
+        <label>LLM Model</label>
+        <select id="model-name">
+          <option value="claude-opus-4-6" selected>Claude Opus 4.6 (recommended)</option>
+          <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (faster)</option>
+          <option value="gpt-4.1">GPT-4.1</option>
+          <option value="gpt-4o">GPT-4o</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Analyst selector ── -->
+  <div class="card">
+    <div class="card-title">🧠 Select Analysts</div>
+    <div class="select-row">
+      <button onclick="toggleAll(true)">Select All</button>
+      <button onclick="toggleAll(false)">Clear All</button>
+      <button onclick="togglePreset('value')">Value Investors</button>
+      <button onclick="togglePreset('growth')">Growth Investors</button>
+      <button onclick="togglePreset('quant')">Quant Analysts</button>
+    </div>
+    <div class="analysts-grid" id="analysts-grid">
+      {% for a in analysts %}
+      <label class="analyst-card selected" data-key="{{ a.key }}" data-group="{{ a.key }}">
+        <input type="checkbox" value="{{ a.key }}" checked>
+        <span class="icon">{{ a.icon }}</span>
+        <div class="info">
+          <div class="name">{{ a.name }}</div>
+          <div class="style">{{ a.style }}</div>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Run button ── -->
+  <button id="run-btn" onclick="runAnalysis()">⚡ Run Hedge Fund Analysis</button>
+
+  <!-- ── Status ── -->
+  <div id="status-bar">
+    <div class="spinner"></div>
+    <span id="status-msg">Initialising agents…</span>
+  </div>
+
+  <!-- ── Error ── -->
+  <div id="error-box" class="error-box" style="display:none;margin-bottom:20px"></div>
+
+  <!-- ── Results ── -->
+  <div id="results">
+
+    <div class="results-header">📊 Analysis Results</div>
+
+    <!-- Ticker tabs -->
+    <div class="ticker-tabs" id="ticker-tabs"></div>
+
+    <!-- Portfolio decisions table -->
+    <div class="decisions-card">
+      <div class="decisions-title">🎯 Portfolio Manager Decisions</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Action</th>
+            <th>Quantity</th>
+            <th>Confidence</th>
+            <th>Reasoning</th>
+          </tr>
+        </thead>
+        <tbody id="decisions-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Analyst signals (per ticker) -->
+    <div id="signals-container"></div>
+
+  </div>
+
+</div>
+
+<script>
+  // ── Dates: default to last 12 months ──────────────────────────────────────
+  const today = new Date();
+  const yearAgo = new Date(today); yearAgo.setFullYear(today.getFullYear() - 1);
+  document.getElementById('end-date').value = today.toISOString().slice(0, 10);
+  document.getElementById('start-date').value = yearAgo.toISOString().slice(0, 10);
+
+  // ── Analyst card toggling ────────────────────────────────────────────────
+  document.querySelectorAll('.analyst-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      card.querySelector('input').checked = card.classList.contains('selected');
+    });
+  });
+
+  function toggleAll(on) {
+    document.querySelectorAll('.analyst-card').forEach(c => {
+      c.classList.toggle('selected', on);
+      c.querySelector('input').checked = on;
+    });
+  }
+
+  const PRESETS = {
+    value:  ['warren_buffett','charlie_munger','ben_graham','mohnish_pabrai','michael_burry','aswath_damodaran'],
+    growth: ['cathie_wood','peter_lynch','phil_fisher','stanley_druckenmiller','rakesh_jhunjhunwala','bill_ackman'],
+    quant:  ['fundamentals_agent','technicals_agent','valuation_agent','sentiment_agent','nassim_taleb'],
+  };
+  function togglePreset(name) {
+    toggleAll(false);
+    const keys = PRESETS[name] || [];
+    keys.forEach(k => {
+      const c = document.querySelector(`.analyst-card[data-key="${k}"]`);
+      if (c) { c.classList.add('selected'); c.querySelector('input').checked = true; }
+    });
+  }
+
+  function getSelectedAnalysts() {
+    return [...document.querySelectorAll('.analyst-card.selected input')].map(i => i.value);
+  }
+
+  // ── Model provider mapping ───────────────────────────────────────────────
+  function getProvider(modelName) {
+    if (modelName.startsWith('claude')) return 'ANTHROPIC';
+    if (modelName.startsWith('gpt'))    return 'OpenAI';
+    return 'ANTHROPIC';
+  }
+
+  // ── Run analysis (SSE) ────────────────────────────────────────────────────
+  async function runAnalysis() {
+    const tickers = document.getElementById('tickers').value
+      .split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
+    if (!tickers.length) { alert('Enter at least one ticker.'); return; }
+
+    const selectedAnalysts = getSelectedAnalysts();
+    if (!selectedAnalysts.length) { alert('Select at least one analyst.'); return; }
+
+    const modelName = document.getElementById('model-name').value;
+
+    const payload = {
+      tickers,
+      start_date:         document.getElementById('start-date').value,
+      end_date:           document.getElementById('end-date').value,
+      initial_cash:       parseFloat(document.getElementById('initial-cash').value),
+      selected_analysts:  selectedAnalysts,
+      model_name:         modelName,
+      model_provider:     getProvider(modelName),
+    };
+
+    // Reset UI
+    document.getElementById('run-btn').disabled = true;
+    document.getElementById('status-bar').style.display = 'flex';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error-box').style.display = 'none';
+    setStatus('Dispatching ' + selectedAnalysts.length + ' analysts for ' + tickers.join(', ') + '…');
+
+    try {
+      const response = await fetch('/api/hedge-fund/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value);
+        for (const line of text.split('\n')) {
+          if (!line.startsWith('data:')) continue;
+          const msg = JSON.parse(line.slice(5).trim());
+          handleEvent(msg, tickers);
+        }
+      }
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      document.getElementById('run-btn').disabled = false;
+      document.getElementById('status-bar').style.display = 'none';
+    }
+  }
+
+  function setStatus(msg) {
+    document.getElementById('status-msg').textContent = msg;
+  }
+
+  function showError(msg) {
+    document.getElementById('error-box').textContent = msg;
+    document.getElementById('error-box').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'none';
+    document.getElementById('run-btn').disabled = false;
+  }
+
+  function handleEvent(msg, tickers) {
+    if (msg.type === 'status') {
+      setStatus(msg.message);
+    } else if (msg.type === 'error') {
+      showError(msg.message);
+    } else if (msg.type === 'done') {
+      renderResults(msg.result, tickers);
+    }
+  }
+
+  // ── Render results ────────────────────────────────────────────────────────
+  function renderResults(result, tickers) {
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'none';
+
+    const decisions = result.decisions || {};
+    const signals   = result.analyst_signals || {};
+
+    // ── Decisions table ──
+    const tbody = document.getElementById('decisions-tbody');
+    tbody.innerHTML = '';
+    for (const ticker of tickers) {
+      const d = decisions[ticker] || {};
+      const action = (d.action || 'hold').toLowerCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span style="font-family:monospace;color:var(--cyan);font-weight:700">${ticker}</span></td>
+        <td><span class="action-${action}">${(d.action || 'HOLD').toUpperCase()}</span></td>
+        <td>${d.quantity ?? '—'}</td>
+        <td>${d.confidence != null ? d.confidence + '%' : '—'}</td>
+        <td style="color:var(--muted);font-size:12px">${d.reasoning || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // ── Ticker tabs + signals ──
+    const tabsEl    = document.getElementById('ticker-tabs');
+    const sigCont   = document.getElementById('signals-container');
+    tabsEl.innerHTML  = '';
+    sigCont.innerHTML = '';
+
+    for (const ticker of tickers) {
+      // Tab button
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn' + (ticker === tickers[0] ? ' active' : '');
+      btn.textContent = ticker;
+      btn.dataset.ticker = ticker;
+      btn.onclick = () => switchTab(ticker);
+      tabsEl.appendChild(btn);
+
+      // Signal panel
+      const panel = document.createElement('div');
+      panel.id = 'panel-' + ticker;
+      panel.style.display = ticker === tickers[0] ? '' : 'none';
+
+      const tickerSignals = extractTickerSignals(signals, ticker);
+      if (tickerSignals.length) {
+        const grid = document.createElement('div');
+        grid.className = 'signals-grid';
+        for (const sig of tickerSignals) {
+          grid.appendChild(buildSignalCard(sig));
+        }
+        panel.appendChild(grid);
+      } else {
+        panel.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:12px 0">No signals returned for this ticker.</p>';
+      }
+      sigCont.appendChild(panel);
+    }
+  }
+
+  function switchTab(ticker) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.ticker === ticker));
+    document.querySelectorAll('[id^="panel-"]').forEach(p => {
+      p.style.display = p.id === 'panel-' + ticker ? '' : 'none';
+    });
+  }
+
+  // analyst_signals shape: { agent_id: { ticker: {signal, confidence, reasoning} } }
+  // or sometimes: { ticker: { agent_id: {...} } }
+  function extractTickerSignals(signals, ticker) {
+    const out = [];
+    // Try agent-first structure
+    for (const [agentId, byTicker] of Object.entries(signals)) {
+      if (byTicker && typeof byTicker === 'object') {
+        const s = byTicker[ticker];
+        if (s && s.signal) {
+          out.push({ agentId, ticker, ...s });
+          continue;
+        }
+        // ticker-first structure
+        if (agentId === ticker) {
+          for (const [aid, s2] of Object.entries(byTicker)) {
+            if (s2 && s2.signal) out.push({ agentId: aid, ticker, ...s2 });
+          }
+        }
+      }
+    }
+    return out;
+  }
+
+  const ANALYST_META = {
+    {% for a in analysts %}
+    "{{ a.key }}":      { name: "{{ a.name }}",  icon: "{{ a.icon }}" },
+    "{{ a.key }}_agent":{ name: "{{ a.name }}",  icon: "{{ a.icon }}" },
+    {% endfor %}
+  };
+
+  function buildSignalCard(sig) {
+    const signal = (sig.signal || 'neutral').toLowerCase();
+    const conf   = sig.confidence || 0;
+    const meta   = ANALYST_META[sig.agentId] || { name: sig.agentId, icon: '🤖' };
+
+    const card = document.createElement('div');
+    card.className = `signal-card ${signal}`;
+    card.innerHTML = `
+      <div class="sc-header">
+        <span class="sc-icon">${meta.icon}</span>
+        <span class="sc-name">${meta.name}</span>
+        <span class="sc-badge ${signal}">${signal.toUpperCase()}</span>
+      </div>
+      <div class="sc-ticker">${sig.ticker}</div>
+      <div class="confidence-row">
+        <span class="conf-label">Confidence</span>
+        <div class="conf-bar">
+          <div class="conf-fill ${signal}" style="width:${conf}%"></div>
+        </div>
+        <span class="conf-pct" style="color:var(--${signal === 'bullish' ? 'green' : signal === 'bearish' ? 'red' : 'yellow'})">${conf}%</span>
+      </div>
+      ${sig.reasoning ? `<div class="sc-reasoning">${escHtml(sig.reasoning)}</div>` : ''}
+    `;
+    return card;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+
+</body>
+</html>
