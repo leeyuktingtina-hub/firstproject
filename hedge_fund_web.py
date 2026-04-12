@@ -64,6 +64,104 @@ ANALYSTS = [
 
 ANALYST_LOOKUP = {a["key"]: a for a in ANALYSTS}
 
+# ── Provider catalogue ────────────────────────────────────────────────────────
+PROVIDERS = {
+    "Anthropic": {
+        "name": "Anthropic", "icon": "🟣", "tag": "Cloud",
+        "env_var": "ANTHROPIC_API_KEY", "local": False,
+        "models": [
+            {"id": "claude-opus-4-6",   "name": "Claude Opus 4.6 (Best)"},
+            {"id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6 (Fast)"},
+            {"id": "claude-haiku-4-6",  "name": "Claude Haiku 4.6 (Cheapest)"},
+        ],
+    },
+    "OpenAI": {
+        "name": "OpenAI", "icon": "🟢", "tag": "Cloud",
+        "env_var": "OPENAI_API_KEY", "local": False,
+        "models": [
+            {"id": "gpt-4.1", "name": "GPT-4.1 (Recommended)"},
+            {"id": "gpt-5.4", "name": "GPT-5.4 (Latest)"},
+        ],
+    },
+    "DeepSeek": {
+        "name": "DeepSeek", "icon": "🔵", "tag": "Cloud",
+        "env_var": "DEEPSEEK_API_KEY", "local": False,
+        "models": [
+            {"id": "deepseek-reasoner", "name": "DeepSeek R1 (Reasoner)"},
+            {"id": "deepseek-chat",     "name": "DeepSeek V3 (Chat)"},
+        ],
+    },
+    "Google": {
+        "name": "Google", "icon": "🔴", "tag": "Cloud",
+        "env_var": "GOOGLE_API_KEY", "local": False,
+        "models": [
+            {"id": "gemini-3-pro-preview", "name": "Gemini 3 Pro"},
+        ],
+    },
+    "Groq": {
+        "name": "Groq", "icon": "⚡", "tag": "Cloud · Fast",
+        "env_var": "GROQ_API_KEY", "local": False,
+        "models": [
+            {"id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B (Fast)"},
+            {"id": "mixtral-8x7b-32768",       "name": "Mixtral 8x7B"},
+        ],
+    },
+    "xAI": {
+        "name": "xAI (Grok)", "icon": "✖️", "tag": "Cloud",
+        "env_var": "XAI_API_KEY", "local": False,
+        "models": [
+            {"id": "grok-4-0709", "name": "Grok 4"},
+        ],
+    },
+    "Mistral": {
+        "name": "Mistral", "icon": "🌊", "tag": "Cloud",
+        "env_var": "MISTRAL_API_KEY", "local": False,
+        "models": [
+            {"id": "mistral-small3.1", "name": "Mistral Small 3.1"},
+        ],
+    },
+    "OpenRouter": {
+        "name": "OpenRouter", "icon": "🔀", "tag": "Cloud · Multi",
+        "env_var": "OPENROUTER_API_KEY", "local": False,
+        "models": [
+            {"id": "qwen/qwen3-235b-a22b-thinking-2507", "name": "Qwen 3 235B Thinking"},
+            {"id": "z-ai/glm-4.5",     "name": "GLM-4.5"},
+            {"id": "z-ai/glm-4.5-air", "name": "GLM-4.5 Air"},
+        ],
+    },
+    "GigaChat": {
+        "name": "GigaChat", "icon": "🤖", "tag": "Cloud",
+        "env_var": "GIGACHAT_API_KEY", "local": False,
+        "models": [
+            {"id": "GigaChat-2-Max", "name": "GigaChat 2 Max"},
+        ],
+    },
+    "Azure OpenAI": {
+        "name": "Azure OpenAI", "icon": "☁️", "tag": "Enterprise",
+        "env_var": "AZURE_OPENAI_API_KEY", "local": False,
+        "models": [
+            {"id": "azure-deployment", "name": "Custom Azure Deployment"},
+        ],
+    },
+    "Ollama": {
+        "name": "Ollama", "icon": "🦙", "tag": "Local · Free",
+        "env_var": None, "local": True,
+        "models": [
+            {"id": "llama3.3:70b-instruct-q4_0", "name": "Llama 3.3 70B (Best)"},
+            {"id": "llama3.1:latest",             "name": "Llama 3.1"},
+            {"id": "gemma3:27b",                  "name": "Gemma 3 27B"},
+            {"id": "gemma3:12b",                  "name": "Gemma 3 12B"},
+            {"id": "gemma3:4b",                   "name": "Gemma 3 4B"},
+            {"id": "qwen3:30b-a3b",               "name": "Qwen 3 30B"},
+            {"id": "qwen3:8b",                    "name": "Qwen 3 8B"},
+            {"id": "qwen3:4b",                    "name": "Qwen 3 4B"},
+            {"id": "mistral-small3.1",            "name": "Mistral Small 3.1"},
+            {"id": "gpt-oss:20b",                 "name": "GPT-OSS 20B"},
+            {"id": "gpt-oss:120b",                "name": "GPT-OSS 120B"},
+        ],
+    },
+}
+
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
@@ -72,8 +170,14 @@ def hedge_fund_page():
     return render_template(
         "hedge_fund.html",
         analysts=ANALYSTS,
+        providers=PROVIDERS,
         source_ready=_source_ready,
     )
+
+
+@app.route("/api/hedge-fund/providers")
+def get_providers():
+    return jsonify(PROVIDERS)
 
 
 @app.route("/api/hedge-fund/analyze", methods=["POST"])
@@ -87,16 +191,12 @@ def analyze():
         "end_date":          "2025-01-01",
         "initial_cash":      100000,
         "selected_analysts": ["warren_buffett", "technicals_agent", ...],
-        "model_provider":    "ANTHROPIC",
+        "model_provider":    "Anthropic",
         "model_name":        "claude-opus-4-6"
     }
     """
     if not _source_ready:
         return jsonify({"error": "Run bash setup_hedge_fund.sh first."}), 500
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        return jsonify({"error": "ANTHROPIC_API_KEY not set."}), 500
 
     data = request.get_json(force=True)
     tickers_raw   = data.get("tickers", [])
@@ -105,8 +205,14 @@ def analyze():
     end_date      = data.get("end_date",   datetime.now().strftime("%Y-%m-%d"))
     initial_cash  = float(data.get("initial_cash", 100_000))
     sel_analysts  = data.get("selected_analysts", [a["key"] for a in ANALYSTS])
-    model_provider = data.get("model_provider", "ANTHROPIC")
+    model_provider = data.get("model_provider", "Anthropic")
     model_name     = data.get("model_name", "claude-opus-4-6")
+
+    # Validate API key for the selected provider
+    provider_info = PROVIDERS.get(model_provider, {})
+    env_var = provider_info.get("env_var")
+    if env_var and not os.environ.get(env_var):
+        return jsonify({"error": f"{env_var} is not set. Export it or add it to your .env file."}), 500
 
     if not tickers:
         return jsonify({"error": "Please enter at least one ticker."}), 400
