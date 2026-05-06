@@ -28,7 +28,6 @@
     min-height: 100vh;
   }
 
-  /* ── Header ── */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -41,13 +40,9 @@
   header h1 { font-size: 17px; font-weight: 700; flex: 1; }
   header h1 span { color: var(--green); }
   .back-link {
-    font-size: 12px;
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--border);
-    padding: 4px 10px;
-    border-radius: 6px;
-    transition: .15s;
+    font-size: 12px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); padding: 4px 10px;
+    border-radius: 6px; transition: .15s;
   }
   .back-link:hover { color: var(--cyan); border-color: var(--cyan); }
   .badge {
@@ -55,32 +50,21 @@
     background: var(--green-d); color: var(--green); border: 1px solid var(--green);
   }
 
-  /* ── Layout ── */
   .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
 
-  /* ── Setup warning ── */
   .setup-warning {
-    background: #2d1a00;
-    border: 1px solid var(--yellow);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    color: var(--yellow);
-    font-size: 14px;
-    line-height: 1.7;
+    background: #2d1a00; border: 1px solid var(--yellow);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px;
+    color: var(--yellow); font-size: 14px; line-height: 1.7;
   }
   .setup-warning code {
     background: #1a1000; border: 1px solid var(--yellow);
     border-radius: 4px; padding: 2px 6px; font-family: monospace;
   }
 
-  /* ── Form card ── */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-    margin-bottom: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px;
   }
   .card-title {
     font-size: 13px; font-weight: 600; text-transform: uppercase;
@@ -91,17 +75,52 @@
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group label { font-size: 12px; color: var(--muted); }
   .form-group input, .form-group select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: 7px;
-    font-size: 13px;
-    outline: none;
-    transition: border-color .15s;
-    font-family: inherit;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 7px;
+    font-size: 13px; outline: none; transition: border-color .15s; font-family: inherit;
   }
   .form-group input:focus, .form-group select:focus { border-color: var(--cyan); }
+
+  /* ── Provider cards ── */
+  .providers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .provider-card {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; cursor: pointer; transition: all .15s;
+    user-select: none; display: flex; flex-direction: column; gap: 5px;
+  }
+  .provider-card:hover { border-color: var(--cyan); background: #1a2030; }
+  .provider-card.selected { border-color: var(--green); background: var(--green-d); }
+  .prov-top { display: flex; align-items: center; gap: 8px; }
+  .prov-icon { font-size: 16px; }
+  .prov-name { font-size: 13px; font-weight: 600; }
+  .provider-tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 20px;
+    background: #21262d; color: var(--muted); width: fit-content;
+  }
+  .provider-card.selected .provider-tag { background: #0d2a18; color: var(--green); }
+  .provider-tag.local { background: #1a2a1a; color: #3fb950; }
+
+  .model-row { margin-bottom: 12px; }
+  .model-row select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 7px;
+    font-size: 13px; outline: none; transition: border-color .15s; font-family: inherit;
+  }
+  .model-row select:focus { border-color: var(--cyan); }
+  .model-row label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+  .key-status {
+    font-size: 12px; padding: 10px 14px; border-radius: 7px;
+    display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+  }
+  .key-status.needed { background: #2d1a00; color: var(--yellow); border: 1px solid var(--yellow); }
+  .key-status.local  { background: #1a2a1a; color: var(--green); border: 1px solid var(--green); }
+  .key-status code   { font-family: monospace; font-size: 11px; }
 
   /* ── Analyst grid ── */
   .analysts-grid {
@@ -110,15 +129,9 @@
     gap: 10px;
   }
   .analyst-card {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: all .15s;
-    user-select: none;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; cursor: pointer; transition: all .15s;
+    user-select: none; display: flex; align-items: flex-start; gap: 10px;
   }
   .analyst-card:hover { border-color: var(--cyan); background: #1a2030; }
   .analyst-card.selected { border-color: var(--green); background: var(--green-d); }
@@ -127,71 +140,49 @@
   .analyst-card .info .style { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
   .analyst-card input[type=checkbox] { display: none; }
 
-  .select-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .select-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .select-row button {
     font-size: 12px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
-    background: none; color: var(--muted); border: 1px solid var(--border);
-    transition: .15s;
+    background: none; color: var(--muted); border: 1px solid var(--border); transition: .15s;
   }
   .select-row button:hover { color: var(--green); border-color: var(--green); }
 
-  /* ── Run button ── */
   #run-btn {
-    width: 100%; padding: 13px;
-    background: var(--green); color: #000;
-    border: none; border-radius: var(--radius);
-    font-size: 15px; font-weight: 700;
-    cursor: pointer; transition: opacity .15s, transform .1s;
-    letter-spacing: .02em;
+    width: 100%; padding: 13px; background: var(--green); color: #000;
+    border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s, transform .1s; letter-spacing: .02em;
   }
   #run-btn:hover   { opacity: .88; }
   #run-btn:active  { transform: scale(.99); }
   #run-btn:disabled { opacity: .4; cursor: default; }
 
-  /* ── Status bar ── */
   #status-bar {
-    display: none;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 18px;
-    margin-bottom: 20px;
-    font-size: 13px; color: var(--cyan);
-    align-items: center; gap: 12px;
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px;
+    font-size: 13px; color: var(--cyan); align-items: center; gap: 12px;
   }
   .spinner {
-    width: 18px; height: 18px;
-    border: 2px solid var(--border);
-    border-top-color: var(--green);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    flex-shrink: 0;
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin .7s linear infinite; flex-shrink: 0;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Results section ── */
   #results { display: none; }
-  .results-header {
-    font-size: 18px; font-weight: 700; margin-bottom: 18px;
-    display: flex; align-items: center; gap: 10px;
-  }
+  .results-header { font-size: 18px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
 
-  /* Signals grid */
   .signals-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px; margin-bottom: 24px;
   }
   .signal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    animation: fadeIn .3s ease;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; animation: fadeIn .3s ease;
   }
   @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
-  .signal-card.bullish  { border-left: 3px solid var(--green); }
-  .signal-card.bearish  { border-left: 3px solid var(--red); }
-  .signal-card.neutral  { border-left: 3px solid var(--yellow); }
+  .signal-card.bullish { border-left: 3px solid var(--green); }
+  .signal-card.bearish { border-left: 3px solid var(--red); }
+  .signal-card.neutral { border-left: 3px solid var(--yellow); }
 
   .sc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .sc-icon  { font-size: 18px; }
@@ -219,56 +210,38 @@
     border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px;
   }
 
-  /* Decisions table */
   .decisions-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    margin-bottom: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 24px;
   }
   .decisions-title {
-    padding: 14px 18px;
-    font-size: 14px; font-weight: 600;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px; font-size: 14px; font-weight: 600;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
   }
   table { width: 100%; border-collapse: collapse; }
   th {
-    background: #21262d;
-    padding: 10px 16px;
-    text-align: left;
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .07em;
-    color: var(--muted);
+    background: #21262d; padding: 10px 16px; text-align: left;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted);
   }
-  td {
-    padding: 10px 16px;
-    font-size: 13px;
-    border-top: 1px solid var(--border);
-  }
+  td { padding: 10px 16px; font-size: 13px; border-top: 1px solid var(--border); }
   tr:hover td { background: #21262d44; }
 
-  .action-buy   { color: var(--green); font-weight: 700; }
-  .action-sell  { color: var(--red);   font-weight: 700; }
-  .action-short { color: var(--purple);font-weight: 700; }
-  .action-cover { color: var(--cyan);  font-weight: 700; }
-  .action-hold  { color: var(--muted); font-weight: 700; }
+  .action-buy   { color: var(--green);  font-weight: 700; }
+  .action-sell  { color: var(--red);    font-weight: 700; }
+  .action-short { color: var(--purple); font-weight: 700; }
+  .action-cover { color: var(--cyan);   font-weight: 700; }
+  .action-hold  { color: var(--muted);  font-weight: 700; }
 
-  /* Ticker tabs */
-  .ticker-tabs {
-    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
-  }
+  .ticker-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
   .tab-btn {
     padding: 6px 14px; border-radius: 6px; cursor: pointer;
     font-size: 13px; font-family: monospace; font-weight: 600;
-    border: 1px solid var(--border); background: none; color: var(--text);
-    transition: .15s;
+    border: 1px solid var(--border); background: none; color: var(--text); transition: .15s;
   }
   .tab-btn.active { background: var(--green-d); border-color: var(--green); color: var(--green); }
   .tab-btn:hover:not(.active) { border-color: var(--cyan); color: var(--cyan); }
 
-  /* Error */
   .error-box {
     background: #2d1a1a; border: 1px solid var(--red);
     border-radius: var(--radius); padding: 14px 18px;
@@ -278,6 +251,7 @@
   @media (max-width: 640px) {
     .form-grid { grid-template-columns: 1fr; }
     .analysts-grid { grid-template-columns: 1fr 1fr; }
+    .providers-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -317,19 +291,38 @@
         <label>Analysis End Date</label>
         <input id="end-date" type="date">
       </div>
-      <div class="form-group">
+      <div class="form-group" style="grid-column: span 2">
         <label>Virtual Portfolio Cash ($)</label>
         <input id="initial-cash" type="number" value="100000" min="1000" step="1000">
       </div>
-      <div class="form-group">
-        <label>LLM Model</label>
-        <select id="model-name">
-          <option value="claude-opus-4-6" selected>Claude Opus 4.6 (recommended)</option>
-          <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (faster)</option>
-          <option value="gpt-4.1">GPT-4.1</option>
-          <option value="gpt-4o">GPT-4o</option>
-        </select>
+    </div>
+  </div>
+
+  <!-- ── AI Model selector ── -->
+  <div class="card">
+    <div class="card-title">🤖 AI Model</div>
+
+    <div class="providers-grid" id="providers-grid">
+      {% for key, p in providers.items() %}
+      <div class="provider-card {% if key == 'Anthropic' %}selected{% endif %}"
+           data-key="{{ key }}" onclick="selectProvider('{{ key }}')">
+        <div class="prov-top">
+          <span class="prov-icon">{{ p.icon }}</span>
+          <span class="prov-name">{{ p.name }}</span>
+        </div>
+        <span class="provider-tag {% if p.local %}local{% endif %}">{{ p.tag }}</span>
       </div>
+      {% endfor %}
+    </div>
+
+    <div class="model-row">
+      <label>Model</label>
+      <select id="model-select"></select>
+    </div>
+
+    <div id="key-status" class="key-status needed">
+      <span>🔑</span>
+      <span id="key-status-msg">Set <code>ANTHROPIC_API_KEY</code> in your <code>.env</code> file</span>
     </div>
   </div>
 
@@ -345,7 +338,7 @@
     </div>
     <div class="analysts-grid" id="analysts-grid">
       {% for a in analysts %}
-      <label class="analyst-card selected" data-key="{{ a.key }}" data-group="{{ a.key }}">
+      <label class="analyst-card selected" data-key="{{ a.key }}">
         <input type="checkbox" value="{{ a.key }}" checked>
         <span class="icon">{{ a.icon }}</span>
         <div class="info">
@@ -371,44 +364,66 @@
 
   <!-- ── Results ── -->
   <div id="results">
-
     <div class="results-header">📊 Analysis Results</div>
-
-    <!-- Ticker tabs -->
     <div class="ticker-tabs" id="ticker-tabs"></div>
-
-    <!-- Portfolio decisions table -->
     <div class="decisions-card">
       <div class="decisions-title">🎯 Portfolio Manager Decisions</div>
       <table>
         <thead>
           <tr>
-            <th>Ticker</th>
-            <th>Action</th>
-            <th>Quantity</th>
-            <th>Confidence</th>
-            <th>Reasoning</th>
+            <th>Ticker</th><th>Action</th><th>Quantity</th><th>Confidence</th><th>Reasoning</th>
           </tr>
         </thead>
         <tbody id="decisions-tbody"></tbody>
       </table>
     </div>
-
-    <!-- Analyst signals (per ticker) -->
     <div id="signals-container"></div>
-
   </div>
 
 </div>
 
 <script>
-  // ── Dates: default to last 12 months ──────────────────────────────────────
+  const PROVIDERS_DATA = {{ providers | tojson }};
+  let selectedProvider = 'Anthropic';
+
+  function selectProvider(key) {
+    selectedProvider = key;
+    document.querySelectorAll('.provider-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.key === key);
+    });
+    updateModelDropdown();
+    updateKeyStatus();
+  }
+
+  function updateModelDropdown() {
+    const sel = document.getElementById('model-select');
+    const models = PROVIDERS_DATA[selectedProvider]?.models || [];
+    sel.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  }
+
+  function updateKeyStatus() {
+    const p = PROVIDERS_DATA[selectedProvider] || {};
+    const el = document.getElementById('key-status');
+    const msg = document.getElementById('key-status-msg');
+    if (p.local) {
+      el.className = 'key-status local';
+      msg.innerHTML = 'No API key needed — runs locally via Ollama. Make sure Ollama is running on port 11434.';
+    } else {
+      el.className = 'key-status needed';
+      msg.innerHTML = `Set <code>${p.env_var}</code> in your <code>.env</code> file`;
+    }
+  }
+
+  updateModelDropdown();
+  updateKeyStatus();
+
+  // ── Dates ────────────────────────────────────────────────────────────────
   const today = new Date();
   const yearAgo = new Date(today); yearAgo.setFullYear(today.getFullYear() - 1);
   document.getElementById('end-date').value = today.toISOString().slice(0, 10);
   document.getElementById('start-date').value = yearAgo.toISOString().slice(0, 10);
 
-  // ── Analyst card toggling ────────────────────────────────────────────────
+  // ── Analyst toggling ─────────────────────────────────────────────────────
   document.querySelectorAll('.analyst-card').forEach(card => {
     card.addEventListener('click', () => {
       card.classList.toggle('selected');
@@ -430,8 +445,7 @@
   };
   function togglePreset(name) {
     toggleAll(false);
-    const keys = PRESETS[name] || [];
-    keys.forEach(k => {
+    (PRESETS[name] || []).forEach(k => {
       const c = document.querySelector(`.analyst-card[data-key="${k}"]`);
       if (c) { c.classList.add('selected'); c.querySelector('input').checked = true; }
     });
@@ -441,14 +455,7 @@
     return [...document.querySelectorAll('.analyst-card.selected input')].map(i => i.value);
   }
 
-  // ── Model provider mapping ───────────────────────────────────────────────
-  function getProvider(modelName) {
-    if (modelName.startsWith('claude')) return 'ANTHROPIC';
-    if (modelName.startsWith('gpt'))    return 'OpenAI';
-    return 'ANTHROPIC';
-  }
-
-  // ── Run analysis (SSE) ────────────────────────────────────────────────────
+  // ── Run analysis ─────────────────────────────────────────────────────────
   async function runAnalysis() {
     const tickers = document.getElementById('tickers').value
       .split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
@@ -457,19 +464,16 @@
     const selectedAnalysts = getSelectedAnalysts();
     if (!selectedAnalysts.length) { alert('Select at least one analyst.'); return; }
 
-    const modelName = document.getElementById('model-name').value;
-
     const payload = {
       tickers,
-      start_date:         document.getElementById('start-date').value,
-      end_date:           document.getElementById('end-date').value,
-      initial_cash:       parseFloat(document.getElementById('initial-cash').value),
-      selected_analysts:  selectedAnalysts,
-      model_name:         modelName,
-      model_provider:     getProvider(modelName),
+      start_date:        document.getElementById('start-date').value,
+      end_date:          document.getElementById('end-date').value,
+      initial_cash:      parseFloat(document.getElementById('initial-cash').value),
+      selected_analysts: selectedAnalysts,
+      model_name:        document.getElementById('model-select').value,
+      model_provider:    selectedProvider,
     };
 
-    // Reset UI
     document.getElementById('run-btn').disabled = true;
     document.getElementById('status-bar').style.display = 'flex';
     document.getElementById('results').style.display = 'none';
@@ -477,23 +481,19 @@
     setStatus('Dispatching ' + selectedAnalysts.length + ' analysts for ' + tickers.join(', ') + '…');
 
     try {
-      const response = await fetch('/api/hedge-fund/analyze', {
+      const resp = await fetch('/api/hedge-fund/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      const reader = response.body.getReader();
+      const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const text = decoder.decode(value);
-        for (const line of text.split('\n')) {
+        for (const line of decoder.decode(value).split('\n')) {
           if (!line.startsWith('data:')) continue;
-          const msg = JSON.parse(line.slice(5).trim());
-          handleEvent(msg, tickers);
+          handleEvent(JSON.parse(line.slice(5).trim()), tickers);
         }
       }
     } catch (err) {
@@ -504,9 +504,7 @@
     }
   }
 
-  function setStatus(msg) {
-    document.getElementById('status-msg').textContent = msg;
-  }
+  function setStatus(msg) { document.getElementById('status-msg').textContent = msg; }
 
   function showError(msg) {
     document.getElementById('error-box').textContent = msg;
@@ -516,13 +514,9 @@
   }
 
   function handleEvent(msg, tickers) {
-    if (msg.type === 'status') {
-      setStatus(msg.message);
-    } else if (msg.type === 'error') {
-      showError(msg.message);
-    } else if (msg.type === 'done') {
-      renderResults(msg.result, tickers);
-    }
+    if (msg.type === 'status')     setStatus(msg.message);
+    else if (msg.type === 'error') showError(msg.message);
+    else if (msg.type === 'done')  renderResults(msg.result, tickers);
   }
 
   // ── Render results ────────────────────────────────────────────────────────
@@ -533,7 +527,6 @@
     const decisions = result.decisions || {};
     const signals   = result.analyst_signals || {};
 
-    // ── Decisions table ──
     const tbody = document.getElementById('decisions-tbody');
     tbody.innerHTML = '';
     for (const ticker of tickers) {
@@ -542,22 +535,19 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><span style="font-family:monospace;color:var(--cyan);font-weight:700">${ticker}</span></td>
-        <td><span class="action-${action}">${(d.action || 'HOLD').toUpperCase()}</span></td>
+        <td><span class="action-${action}">${(d.action||'HOLD').toUpperCase()}</span></td>
         <td>${d.quantity ?? '—'}</td>
-        <td>${d.confidence != null ? d.confidence + '%' : '—'}</td>
-        <td style="color:var(--muted);font-size:12px">${d.reasoning || ''}</td>
+        <td>${d.confidence != null ? d.confidence+'%' : '—'}</td>
+        <td style="color:var(--muted);font-size:12px">${d.reasoning||''}</td>
       `;
       tbody.appendChild(tr);
     }
 
-    // ── Ticker tabs + signals ──
-    const tabsEl    = document.getElementById('ticker-tabs');
-    const sigCont   = document.getElementById('signals-container');
-    tabsEl.innerHTML  = '';
-    sigCont.innerHTML = '';
+    const tabsEl  = document.getElementById('ticker-tabs');
+    const sigCont = document.getElementById('signals-container');
+    tabsEl.innerHTML = sigCont.innerHTML = '';
 
     for (const ticker of tickers) {
-      // Tab button
       const btn = document.createElement('button');
       btn.className = 'tab-btn' + (ticker === tickers[0] ? ' active' : '');
       btn.textContent = ticker;
@@ -565,18 +555,15 @@
       btn.onclick = () => switchTab(ticker);
       tabsEl.appendChild(btn);
 
-      // Signal panel
       const panel = document.createElement('div');
       panel.id = 'panel-' + ticker;
       panel.style.display = ticker === tickers[0] ? '' : 'none';
 
-      const tickerSignals = extractTickerSignals(signals, ticker);
-      if (tickerSignals.length) {
+      const sigs = extractTickerSignals(signals, ticker);
+      if (sigs.length) {
         const grid = document.createElement('div');
         grid.className = 'signals-grid';
-        for (const sig of tickerSignals) {
-          grid.appendChild(buildSignalCard(sig));
-        }
+        sigs.forEach(s => grid.appendChild(buildSignalCard(s)));
         panel.appendChild(grid);
       } else {
         panel.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:12px 0">No signals returned for this ticker.</p>';
@@ -587,28 +574,18 @@
 
   function switchTab(ticker) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.ticker === ticker));
-    document.querySelectorAll('[id^="panel-"]').forEach(p => {
-      p.style.display = p.id === 'panel-' + ticker ? '' : 'none';
-    });
+    document.querySelectorAll('[id^="panel-"]').forEach(p => { p.style.display = p.id === 'panel-' + ticker ? '' : 'none'; });
   }
 
-  // analyst_signals shape: { agent_id: { ticker: {signal, confidence, reasoning} } }
-  // or sometimes: { ticker: { agent_id: {...} } }
   function extractTickerSignals(signals, ticker) {
     const out = [];
-    // Try agent-first structure
     for (const [agentId, byTicker] of Object.entries(signals)) {
-      if (byTicker && typeof byTicker === 'object') {
-        const s = byTicker[ticker];
-        if (s && s.signal) {
-          out.push({ agentId, ticker, ...s });
-          continue;
-        }
-        // ticker-first structure
-        if (agentId === ticker) {
-          for (const [aid, s2] of Object.entries(byTicker)) {
-            if (s2 && s2.signal) out.push({ agentId: aid, ticker, ...s2 });
-          }
+      if (!byTicker || typeof byTicker !== 'object') continue;
+      const s = byTicker[ticker];
+      if (s && s.signal) { out.push({ agentId, ticker, ...s }); continue; }
+      if (agentId === ticker) {
+        for (const [aid, s2] of Object.entries(byTicker)) {
+          if (s2 && s2.signal) out.push({ agentId: aid, ticker, ...s2 });
         }
       }
     }
@@ -617,8 +594,8 @@
 
   const ANALYST_META = {
     {% for a in analysts %}
-    "{{ a.key }}":      { name: "{{ a.name }}",  icon: "{{ a.icon }}" },
-    "{{ a.key }}_agent":{ name: "{{ a.name }}",  icon: "{{ a.icon }}" },
+    "{{ a.key }}":       { name: "{{ a.name }}", icon: "{{ a.icon }}" },
+    "{{ a.key }}_agent": { name: "{{ a.name }}", icon: "{{ a.icon }}" },
     {% endfor %}
   };
 
@@ -626,8 +603,7 @@
     const signal = (sig.signal || 'neutral').toLowerCase();
     const conf   = sig.confidence || 0;
     const meta   = ANALYST_META[sig.agentId] || { name: sig.agentId, icon: '🤖' };
-
-    const card = document.createElement('div');
+    const card   = document.createElement('div');
     card.className = `signal-card ${signal}`;
     card.innerHTML = `
       <div class="sc-header">
@@ -638,10 +614,8 @@
       <div class="sc-ticker">${sig.ticker}</div>
       <div class="confidence-row">
         <span class="conf-label">Confidence</span>
-        <div class="conf-bar">
-          <div class="conf-fill ${signal}" style="width:${conf}%"></div>
-        </div>
-        <span class="conf-pct" style="color:var(--${signal === 'bullish' ? 'green' : signal === 'bearish' ? 'red' : 'yellow'})">${conf}%</span>
+        <div class="conf-bar"><div class="conf-fill ${signal}" style="width:${conf}%"></div></div>
+        <span class="conf-pct" style="color:var(--${signal==='bullish'?'green':signal==='bearish'?'red':'yellow'})">${conf}%</span>
       </div>
       ${sig.reasoning ? `<div class="sc-reasoning">${escHtml(sig.reasoning)}</div>` : ''}
     `;
@@ -652,6 +626,5 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 </script>
-
 </body>
 </html>
