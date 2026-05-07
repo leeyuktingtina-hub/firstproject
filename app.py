@@ -186,6 +186,14 @@ def run_agent_turn(user_message: str, history: list, provider: str, model_name: 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
+@app.route("/api/debug/keys")
+def debug_keys():
+    """Shows which API keys are set (values hidden). Remove after debugging."""
+    return jsonify({
+        k: bool(os.environ.get(v["env_var"]))
+        for k, v in CHAT_PROVIDERS.items()
+    })
+
 @app.route("/")
 def index():
     if "sid" not in session:
