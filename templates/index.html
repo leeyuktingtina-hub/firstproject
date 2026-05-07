@@ -329,7 +329,12 @@
 <header>
   <span class="logo">📈</span>
   <h1>Stock Investment <span>Agent</span></h1>
-  <span class="header-badge">AI · Tech Stocks</span>
+  <select id="provider-select" onchange="onProviderChange()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
+    {% for key, p in providers.items() %}
+    <option value="{{ key }}">{{ p.icon }} {{ p.name }}</option>
+    {% endfor %}
+  </select>
+  <select id="model-select" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;max-width:160px;"></select>
   <button id="reset-btn" onclick="resetChat()">New Chat</button>
 </header>
 
@@ -372,18 +377,6 @@
       </button>
     </div>
 
-    <div class="sidebar-section">
-      <h2>AI Model</h2>
-      <div class="model-select-wrap">
-        <select id="provider-select" onchange="onProviderChange()">
-          {% for key, p in providers.items() %}
-          <option value="{{ key }}">{{ p.icon }} {{ p.name }}</option>
-          {% endfor %}
-        </select>
-        <select id="model-select"></select>
-        <div class="provider-note" id="provider-note"></div>
-      </div>
-    </div>
   </aside>
 
   <!-- Chat -->
