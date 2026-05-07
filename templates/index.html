@@ -307,6 +307,17 @@
   .welcome h2 { font-size: 16px; margin-bottom: 8px; color: var(--green); }
   .welcome p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
+  /* ── Model selector ── */
+  .model-select-wrap select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 8px; border-radius: 6px;
+    font-size: 12px; outline: none; cursor: pointer; font-family: inherit;
+    margin-bottom: 5px;
+  }
+  .model-select-wrap select:focus { border-color: var(--green); }
+  .provider-note { font-size: 11px; color: var(--muted); line-height: 1.4; padding: 6px 8px; background: #21262d; border-radius: 5px; }
+  .provider-note code { color: var(--cyan); font-family: monospace; }
+
   /* ── Responsive: hide sidebar on narrow screens ── */
   @media (max-width: 600px) {
     aside { display: none; }
@@ -360,6 +371,19 @@
         <span class="icon">📊</span>Enter My Holdings
       </button>
     </div>
+
+    <div class="sidebar-section">
+      <h2>AI Model</h2>
+      <div class="model-select-wrap">
+        <select id="provider-select" onchange="onProviderChange()">
+          {% for key, p in providers.items() %}
+          <option value="{{ key }}">{{ p.icon }} {{ p.name }}</option>
+          {% endfor %}
+        </select>
+        <select id="model-select"></select>
+        <div class="provider-note" id="provider-note"></div>
+      </div>
+    </div>
   </aside>
 
   <!-- Chat -->
@@ -405,6 +429,23 @@
   const input   = document.getElementById('input');
   const sendBtn = document.getElementById('send-btn');
   const msgBox  = document.getElementById('messages');
+
+  // ── Provider / model selector ─────────────────────────────────────────────
+  const PROVIDERS = {{ providers | tojson }};
+
+  function onProviderChange() {
+    const key    = document.getElementById('provider-select').value;
+    const prov   = PROVIDERS[key];
+    const sel    = document.getElementById('model-select');
+    sel.innerHTML = prov.models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    document.getElementById('provider-note').innerHTML =
+      `Set <code>${prov.env_var}</code> in Railway Variables`;
+  }
+
+  onProviderChange();  // initialise on load
+
+  function getSelectedProvider() { return document.getElementById('provider-select').value; }
+  function getSelectedModel()    { return document.getElementById('model-select').value; }
 
   // Auto-resize textarea
   input.addEventListener('input', () => {
@@ -551,7 +592,7 @@
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg }),
+        body: JSON.stringify({ message: msg, provider: getSelectedProvider(), model: getSelectedModel() }),
       });
       const data = await res.json();
       removeTyping();
