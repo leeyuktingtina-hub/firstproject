@@ -189,9 +189,16 @@ def run_agent_turn(user_message: str, history: list, provider: str, model_name: 
 @app.route("/api/debug/keys")
 def debug_keys():
     """Shows which API keys are set (values hidden). Remove after debugging."""
-    return jsonify({
+    api_key_status = {
         k: bool(os.environ.get(v["env_var"]))
         for k, v in CHAT_PROVIDERS.items()
+    }
+    # Show all env var names so we can see what Railway actually injects
+    all_keys = sorted(os.environ.keys())
+    return jsonify({
+        "api_keys": api_key_status,
+        "all_env_var_names": all_keys,
+        "total_env_vars": len(all_keys),
     })
 
 @app.route("/")
