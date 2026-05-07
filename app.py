@@ -27,6 +27,7 @@ from investment_agent import (
     SYSTEM_PROMPT,
     DEFAULT_WATCHLIST,
 )
+from backtest import run_backtest
 
 load_dotenv()
 
@@ -135,6 +136,30 @@ def reset():
     if sid:
         _sessions.pop(sid, None)
     return jsonify({"status": "ok"})
+
+
+@app.route("/backtest")
+def backtest_page():
+    return render_template("backtest.html", watchlist=DEFAULT_WATCHLIST)
+
+
+@app.route("/api/backtest/run", methods=["POST"])
+def backtest_run():
+    data     = request.get_json(force=True)
+    raw      = data.get("tickers", "NVDA,MSFT")
+    tickers  = [t.strip().upper() for t in raw.split(",") if t.strip()]
+    if not tickers:
+        return jsonify({"error": "No tickers provided"}), 400
+    result = run_backtest(
+        tickers      = tickers,
+        start_date   = data.get("start_date", "2020-01-01"),
+        end_date     = data.get("end_date",   "2024-12-31"),
+        initial_cash = float(data.get("initial_cash", 100_000)),
+        position_size= float(data.get("position_size", 0.20)),
+        stop_loss    = float(data.get("stop_loss",    0.08)),
+        take_profit  = float(data.get("take_profit",  0.25)),
+    )
+    return jsonify(result)
 
 
 if __name__ == "__main__":
