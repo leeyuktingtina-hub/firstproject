@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Backtester</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:      #0d1117;
+    --surface: #161b22;
+    --border:  #30363d;
+    --green:   #3fb950;
+    --green-d: #1a3a24;
+    --cyan:    #58a6ff;
+    --red:     #f85149;
+    --yellow:  #e3b341;
+    --text:    #e6edf3;
+    --muted:   #8b949e;
+    --radius:  10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  header h1 span { color: var(--green); }
+  .back-link {
+    font-size: 12px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; transition: .15s;
+  }
+  .back-link:hover { color: var(--cyan); border-color: var(--cyan); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 16px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12px; color: var(--muted); }
+  .form-group input, .form-group select {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: 7px; font-size: 13px; outline: none;
+    transition: border-color .15s; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--cyan); }
+
+  .ticker-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip {
+    font-size: 11px; font-family: monospace; padding: 3px 9px; border-radius: 5px;
+    border: 1px solid var(--border); cursor: pointer; transition: .15s; color: var(--muted);
+  }
+  .chip:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  #run-btn {
+    width: 100%; padding: 13px; background: var(--green); color: #000;
+    border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s; letter-spacing: .02em;
+  }
+  #run-btn:hover { opacity: .88; }
+  #run-btn:disabled { opacity: .4; cursor: default; }
+
+  .spinner-row {
+    display: none; align-items: center; gap: 12px;
+    color: var(--cyan); font-size: 13px; padding: 14px 0;
+  }
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin .7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Metrics grid */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; text-align: center;
+  }
+  .metric-card .m-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .metric-card .m-value { font-size: 22px; font-weight: 700; }
+  .metric-card .m-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .neu { color: var(--cyan); }
+
+  /* Chart */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .chart-wrap  { position: relative; height: 280px; }
+
+  /* Ticker summary */
+  .ticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .ticker-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .ticker-card .tc-name { font-size: 15px; font-weight: 700; font-family: monospace; color: var(--cyan); margin-bottom: 10px; }
+  .ticker-card .tc-row  { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .ticker-card .tc-row:last-child { border-bottom: none; }
+  .ticker-card .tc-row span:last-child { color: var(--text); font-weight: 600; }
+  .sig-buy  { color: var(--green) !important; }
+  .sig-sell { color: var(--red)   !important; }
+  .sig-hold { color: var(--muted) !important; }
+
+  /* Trade log */
+  .trade-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .trade-table th { background: #21262d; padding: 8px 12px; text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .trade-table td { padding: 8px 12px; border-top: 1px solid var(--border); }
+  .trade-table tr:hover td { background: #21262d44; }
+  .buy-row  { color: var(--green); font-weight: 700; }
+  .sell-row { color: var(--red);   font-weight: 700; }
+
+  #results { display: none; }
+  .error-box { background: #2d1a1a; border: 1px solid var(--red); border-radius: var(--radius); padding: 14px; color: var(--red); font-size: 13px; margin-bottom: 20px; display: none; }
+
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:22px">📈</span>
+  <h1>Strategy <span>Backtester</span></h1>
+  <a href="/" class="back-link">← Chat</a>
+</header>
+
+<div class="page">
+
+  <!-- Config -->
+  <div class="card">
+    <div class="card-title">⚙️ Backtest Configuration</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:span 2">
+        <label>Tickers (comma-separated)</label>
+        <input id="tickers" type="text" value="NVDA, MSFT, GOOGL, META" placeholder="NVDA, MSFT, AMD">
+        <div class="ticker-chips">
+          {% for t in watchlist %}
+          <span class="chip" onclick="addTicker('{{ t }}')">{{ t }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input id="start-date" type="date" value="2020-01-01">
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input id="end-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Initial Cash ($)</label>
+        <input id="initial-cash" type="number" value="100000" min="10000" step="10000">
+      </div>
+      <div class="form-group">
+        <label>Position Size (% per stock)</label>
+        <select id="position-size">
+          <option value="0.10">10% — Conservative</option>
+          <option value="0.20" selected>20% — Balanced</option>
+          <option value="0.33">33% — Aggressive</option>
+          <option value="0.50">50% — High Conviction</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Stop Loss</label>
+        <select id="stop-loss">
+          <option value="0.05">5% — Tight</option>
+          <option value="0.08" selected>8% — Standard</option>
+          <option value="0.15">15% — Wide</option>
+          <option value="0.99">None</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Take Profit</label>
+        <select id="take-profit">
+          <option value="0.15">15% — Conservative</option>
+          <option value="0.25" selected>25% — Balanced</option>
+          <option value="0.50">50% — Patient</option>
+          <option value="9.99">None (signal only)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <button id="run-btn" onclick="runBacktest()">⚡ Run Backtest</button>
+  <div class="spinner-row" id="spinner"><div class="spinner"></div><span>Running backtest — fetching historical data…</span></div>
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Metrics -->
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <!-- Equity curve -->
+    <div class="chart-card">
+      <div class="chart-title">📊 Portfolio Value vs S&P 500 (Benchmark)</div>
+      <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+    </div>
+
+    <!-- Ticker summary -->
+    <div class="card">
+      <div class="card-title">🔍 Per-Ticker Signal Summary</div>
+      <div class="ticker-grid" id="ticker-grid"></div>
+    </div>
+
+    <!-- Trade log -->
+    <div class="card">
+      <div class="card-title">📋 Trade Log (last 100)</div>
+      <div style="overflow-x:auto">
+        <table class="trade-table">
+          <thead><tr><th>Date</th><th>Ticker</th><th>Action</th><th>Price</th><th>Shares</th><th>P&L %</th><th>Reason</th></tr></thead>
+          <tbody id="trade-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Set default end date to today
+  document.getElementById('end-date').value = new Date().toISOString().slice(0, 10);
+
+  function addTicker(t) {
+    const el  = document.getElementById('tickers');
+    const cur = el.value.split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
+    if (!cur.includes(t)) { el.value = [...cur, t].join(', '); }
+  }
+
+  let chartInstance = null;
+
+  async function runBacktest() {
+    const tickers = document.getElementById('tickers').value;
+    if (!tickers.trim()) { alert('Enter at least one ticker.'); return; }
+
+    document.getElementById('run-btn').disabled = true;
+    document.getElementById('spinner').style.display = 'flex';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error-box').style.display = 'none';
+
+    try {
+      const resp = await fetch('/api/backtest/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tickers:       tickers,
+          start_date:    document.getElementById('start-date').value,
+          end_date:      document.getElementById('end-date').value,
+          initial_cash:  parseFloat(document.getElementById('initial-cash').value),
+          position_size: parseFloat(document.getElementById('position-size').value),
+          stop_loss:     parseFloat(document.getElementById('stop-loss').value),
+          take_profit:   parseFloat(document.getElementById('take-profit').value),
+        }),
+      });
+      const data = await resp.json();
+      if (data.error) { showError(data.error); return; }
+      renderResults(data);
+    } catch (e) {
+      showError('Network error: ' + e.message);
+    } finally {
+      document.getElementById('run-btn').disabled = false;
+      document.getElementById('spinner').style.display = 'none';
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function renderResults(data) {
+    document.getElementById('results').style.display = 'block';
+    const m = data.metrics;
+
+    // ── Metrics ──
+    const metrics = [
+      { label: 'Total Return',   value: fmt(m.total_return, '%'),  cls: color(m.total_return),  sub: '' },
+      { label: 'Ann. Return',    value: fmt(m.cagr, '%'),          cls: color(m.cagr),           sub: 'CAGR' },
+      { label: 'vs S&P 500',     value: m.alpha != null ? fmt(m.alpha, '%') : '—', cls: color(m.alpha), sub: 'Alpha' },
+      { label: 'Sharpe Ratio',   value: m.sharpe_ratio?.toFixed(2) ?? '—', cls: m.sharpe_ratio > 1 ? 'pos' : m.sharpe_ratio < 0 ? 'neg' : 'neu', sub: '>1 = good' },
+      { label: 'Max Drawdown',   value: fmt(m.max_drawdown, '%'),  cls: 'neg',                   sub: 'worst dip' },
+      { label: 'Win Rate',       value: fmt(m.win_rate, '%'),      cls: m.win_rate > 50 ? 'pos' : 'neg', sub: `${m.total_trades} trades` },
+      { label: 'Avg Win',        value: fmt(m.avg_win, '%'),       cls: 'pos',                   sub: 'per trade' },
+      { label: 'Avg Loss',       value: fmt(m.avg_loss, '%'),      cls: 'neg',                   sub: 'per trade' },
+      { label: 'Final Value',    value: '$' + (m.final_value/1000).toFixed(1) + 'k', cls: 'neu', sub: '' },
+    ];
+
+    const grid = document.getElementById('metrics-grid');
+    grid.innerHTML = metrics.map(m => `
+      <div class="metric-card">
+        <div class="m-label">${m.label}</div>
+        <div class="m-value ${m.cls}">${m.value}</div>
+        ${m.sub ? `<div class="m-sub">${m.sub}</div>` : ''}
+      </div>
+    `).join('');
+
+    // ── Equity curve ──
+    const history = data.portfolio_history || [];
+    const labels  = history.map(h => h.date);
+    const values  = history.map(h => h.value);
+
+    // Scale SPY to same initial cash
+    const initial = values[0] || 1;
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('equity-chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Strategy',
+            data: values,
+            borderColor: '#3fb950',
+            backgroundColor: 'rgba(63,185,80,0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#8b949e', font: { size: 12 } } },
+          tooltip: {
+            backgroundColor: '#161b22',
+            borderColor: '#30363d',
+            borderWidth: 1,
+            titleColor: '#e6edf3',
+            bodyColor: '#8b949e',
+            callbacks: { label: ctx => ` $${ctx.parsed.y.toLocaleString()}` },
+          },
+        },
+        scales: {
+          x: { ticks: { color: '#8b949e', maxTicksLimit: 8 }, grid: { color: '#21262d' } },
+          y: { ticks: { color: '#8b949e', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#21262d' } },
+        },
+      },
+    });
+
+    // ── Ticker summary ──
+    const tgrid = document.getElementById('ticker-grid');
+    tgrid.innerHTML = '';
+    for (const [ticker, s] of Object.entries(data.ticker_summary || {})) {
+      const sigCls = s.current_signal === 'BUY' ? 'sig-buy' : s.current_signal === 'SELL' ? 'sig-sell' : 'sig-hold';
+      tgrid.innerHTML += `
+        <div class="ticker-card">
+          <div class="tc-name">${ticker}</div>
+          <div class="tc-row"><span>Current Signal</span><span class="${sigCls}">${s.current_signal}</span></div>
+          <div class="tc-row"><span>Score</span><span>${s.current_score}/100</span></div>
+          <div class="tc-row"><span>RSI</span><span>${s.current_rsi}</span></div>
+          <div class="tc-row"><span>Buy Signals</span><span>${s.buy_signals}</span></div>
+          <div class="tc-row"><span>Sell Signals</span><span>${s.sell_signals}</span></div>
+          <div class="tc-row"><span>Trades</span><span>${s.trades}</span></div>
+        </div>
+      `;
+    }
+
+    // ── Trade log ──
+    const tbody = document.getElementById('trade-tbody');
+    tbody.innerHTML = (data.trades || []).slice().reverse().map(t => `
+      <tr>
+        <td>${t.date}</td>
+        <td style="font-family:monospace;color:var(--cyan)">${t.ticker}</td>
+        <td class="${t.action === 'BUY' ? 'buy-row' : 'sell-row'}">${t.action}</td>
+        <td>$${t.price}</td>
+        <td>${t.shares}</td>
+        <td class="${t.pnl_pct > 0 ? 'buy-row' : t.pnl_pct < 0 ? 'sell-row' : ''}">${t.pnl_pct !== 0 ? t.pnl_pct + '%' : '—'}</td>
+        <td style="color:var(--muted)">${t.reason}</td>
+      </tr>
+    `).join('');
+  }
+
+  function fmt(v, suffix) {
+    if (v == null) return '—';
+    return (v > 0 ? '+' : '') + v.toFixed(1) + suffix;
+  }
+  function color(v) {
+    if (v == null) return 'neu';
+    return v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu';
+  }
+</script>
+</body>
+</html>

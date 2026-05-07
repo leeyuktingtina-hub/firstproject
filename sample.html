@@ -3,95 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sample — 漫畫孕期故事</title>
+  <title>Sample v2 — 漫畫孕期故事</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background: #f0e8d8;
+      font-family: 'Segoe UI', 'PingFang SC', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      font-family: 'Segoe UI', 'PingFang SC', sans-serif;
-      padding: 2rem 1rem;
+      padding: 2rem 1rem 4rem;
+      gap: 1.5rem;
     }
 
-    h1 {
-      font-size: 1.1rem;
-      color: #555;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.1em;
-    }
+    h1 { font-size: 1rem; color: #666; letter-spacing: 0.12em; }
 
-    /* ── 漫畫頁面外框 ── */
     .page {
       background: #fff;
       border: 4px solid #111;
       box-shadow: 8px 8px 0 #111;
       width: 100%;
-      max-width: 680px;
+      max-width: 720px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: auto auto;
-      gap: 0;
     }
 
-    /* ── 單格 ── */
     .panel {
       border: 3px solid #111;
-      padding: 1.2rem;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.7rem;
-      min-height: 220px;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      min-height: 280px;
       position: relative;
       background: #fffdf7;
       overflow: hidden;
     }
 
-    /* 跨兩欄的大格 */
-    .panel.wide {
-      grid-column: span 2;
-      min-height: 180px;
-      flex-direction: row;
-      gap: 2rem;
-      padding: 1.5rem 2rem;
-    }
-
-    /* 半網點背景裝飾 */
+    /* subtle dot tone */
     .panel::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(circle, #ccc 1px, transparent 1px);
-      background-size: 12px 12px;
-      opacity: 0.15;
+      background-image: radial-gradient(circle, #bbb 1px, transparent 1px);
+      background-size: 14px 14px;
+      opacity: 0.12;
       pointer-events: none;
     }
 
-    /* ── 對話泡 ── */
+    .panel.wide {
+      grid-column: span 2;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      min-height: 260px;
+      padding: 1.5rem 2rem;
+    }
+
+    .caption {
+      font-size: 0.72rem;
+      color: #888;
+      font-style: italic;
+      align-self: flex-start;
+      background: rgba(0,0,0,0.04);
+      padding: 2px 8px;
+      border-radius: 3px;
+      z-index: 1;
+    }
+
+    /* speech bubble */
     .bubble {
       position: relative;
       background: #fff;
       border: 2.5px solid #111;
       border-radius: 20px;
       padding: 0.45rem 0.9rem;
-      font-size: 0.88rem;
-      font-weight: 700;
+      font-size: 0.9rem;
+      font-weight: 800;
       text-align: center;
-      line-height: 1.45;
-      max-width: 180px;
+      line-height: 1.5;
       z-index: 1;
+      max-width: 200px;
     }
     .bubble::after {
       content: '';
       position: absolute;
-      bottom: -11px;
-      left: 50%;
+      bottom: -12px; left: 50%;
       transform: translateX(-50%);
       border: 7px solid transparent;
       border-top-color: #111;
@@ -99,171 +101,297 @@
     .bubble::before {
       content: '';
       position: absolute;
-      bottom: -7px;
-      left: 50%;
+      bottom: -8px; left: 50%;
       transform: translateX(-50%);
       border: 5.5px solid transparent;
       border-top-color: #fff;
       z-index: 1;
     }
-
-    /* 思考泡 */
     .bubble.think {
-      border-radius: 50%;
-      padding: 0.6rem 1rem;
-      font-style: italic;
-      background: #f5f5ff;
+      background: #f0f5ff;
       border-color: #888;
-    }
-    .bubble.think::after { border-top-color: #888; }
-    .bubble.think::before { border-top-color: #f5f5ff; }
-
-    /* 大叫泡 */
-    .bubble.shout {
-      border-radius: 4px;
-      background: #fff8dc;
-      transform: rotate(-1.5deg);
-      border-width: 3px;
-      font-size: 1rem;
-      max-width: 220px;
-    }
-
-    /* ── 場景標題 ── */
-    .caption {
-      font-size: 0.75rem;
-      color: #777;
+      border-radius: 50%;
+      padding: 0.6rem 1.1rem;
       font-style: italic;
-      align-self: flex-start;
-      background: rgba(0,0,0,0.04);
-      padding: 2px 7px;
-      border-radius: 3px;
-      z-index: 1;
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+    .bubble.think::after  { border-top-color: #888; }
+    .bubble.think::before { border-top-color: #f0f5ff; }
+    .bubble.shout {
+      background: #fff8dc;
+      border-width: 3px;
+      border-radius: 6px;
+      transform: rotate(-1.5deg);
+      font-size: 1rem;
+      max-width: 230px;
     }
 
-    /* ── 音效字 ── */
     .sfx {
-      font-size: 1.6rem;
+      font-size: 2rem;
       font-weight: 900;
       color: #d63031;
       transform: rotate(-5deg) skewX(-8deg);
       display: inline-block;
-      text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
-      letter-spacing: 0.05em;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.12);
+      letter-spacing: 0.04em;
       z-index: 1;
     }
 
-    svg { z-index: 1; }
+    svg { z-index: 1; flex-shrink: 0; }
   </style>
 </head>
 <body>
 
-  <h1>SAMPLE — 第一章：意外的兩條線</h1>
+  <h1>SAMPLE v2 — 第一章：意外的兩條線</h1>
 
   <div class="page">
 
-    <!-- 格1：廁所，早晨 -->
+    <!-- ===== PANEL 1: 廁所早晨，媽媽正常表情 ===== -->
     <div class="panel">
       <div class="caption">某個尋常的早晨…</div>
-      <!-- 廁所場景 SVG -->
-      <svg width="110" height="130" viewBox="0 0 110 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 窗戶 -->
-        <rect x="30" y="8" width="50" height="38" rx="3" fill="#d0eaff" stroke="#111" stroke-width="2.5"/>
-        <line x1="55" y1="8" x2="55" y2="46" stroke="#111" stroke-width="2"/>
-        <line x1="30" y1="27" x2="80" y2="27" stroke="#111" stroke-width="2"/>
-        <!-- 牆 -->
-        <rect x="0" y="46" width="110" height="84" fill="#f9f5ef" stroke="#111" stroke-width="0"/>
-        <line x1="0" y1="46" x2="110" y2="46" stroke="#111" stroke-width="2.5"/>
-        <!-- 地板 -->
-        <rect x="0" y="110" width="110" height="20" fill="#e8ddd0" stroke="#111" stroke-width="2"/>
-        <!-- 洗手台輪廓 -->
-        <ellipse cx="20" cy="95" rx="16" ry="10" fill="#fff" stroke="#111" stroke-width="2"/>
-        <rect x="16" y="85" width="8" height="10" fill="#fff" stroke="#111" stroke-width="1.5"/>
-        <!-- 主角：女生半身（媽媽） -->
+
+      <svg width="160" height="220" viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- 背景：窗戶 -->
+        <rect x="50" y="4" width="60" height="44" rx="3" fill="#cce8ff" stroke="#111" stroke-width="2"/>
+        <line x1="80" y1="4" x2="80" y2="48" stroke="#111" stroke-width="1.5"/>
+        <line x1="50" y1="26" x2="110" y2="26" stroke="#111" stroke-width="1.5"/>
+        <!-- 洗手台 -->
+        <rect x="20" y="180" width="120" height="14" rx="3" fill="#e8ddd0" stroke="#111" stroke-width="2"/>
+        <ellipse cx="80" cy="180" rx="28" ry="10" fill="#f5f0ea" stroke="#111" stroke-width="2"/>
+
+        <!-- ====== 媽媽角色 ====== -->
+
+        <!-- 頭髮後層 -->
+        <path d="M34 88 Q38 44 80 40 Q122 44 126 88" fill="#3d1f0a"/>
+        <!-- 側丸子頭（招牌特徵） -->
+        <circle cx="128" cy="72" r="18" fill="#3d1f0a" stroke="#111" stroke-width="2"/>
+        <circle cx="128" cy="72" r="11" fill="#5c300f"/>
+        <path d="M118 60 Q128 54 138 60" stroke="#7a4520" stroke-width="2" fill="none"/>
+
         <!-- 頭 -->
-        <circle cx="78" cy="72" r="16" fill="#ffe0c0" stroke="#111" stroke-width="2.5"/>
-        <!-- 頭髮 -->
-        <path d="M62 66 Q65 52 78 52 Q91 52 94 66" fill="#4a2f1a" stroke="#4a2f1a" stroke-width="1"/>
-        <path d="M62 66 Q60 74 62 80" stroke="#4a2f1a" stroke-width="4" stroke-linecap="round"/>
-        <path d="M94 66 Q96 74 94 80" stroke="#4a2f1a" stroke-width="4" stroke-linecap="round"/>
-        <!-- 眼睛 -->
-        <circle cx="73" cy="72" r="2.5" fill="#111"/>
-        <circle cx="83" cy="72" r="2.5" fill="#111"/>
-        <!-- 嘴巴：正常 -->
-        <path d="M74 79 Q78 82 82 79" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <!-- 身體 -->
-        <path d="M64 88 Q66 105 66 110 L90 110 Q90 105 92 88 Q84 84 78 84 Q72 84 64 88Z" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
-        <!-- 手抱胸 -->
-        <path d="M64 95 Q72 92 78 93 Q84 92 92 95" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="80" cy="82" r="42" fill="#ffd5a8" stroke="#111" stroke-width="2.5"/>
+
+        <!-- 耳朵 -->
+        <ellipse cx="38" cy="84" rx="8" ry="10" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+        <ellipse cx="122" cy="84" rx="8" ry="10" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+
+        <!-- 前瀏海 -->
+        <path d="M40 68 Q46 42 62 48 Q70 36 80 42 Q90 36 98 48 Q114 42 120 68" fill="#3d1f0a"/>
+
+        <!-- 臉頰紅暈 -->
+        <ellipse cx="55" cy="96" rx="13" ry="7" fill="#ffb3ba" opacity="0.7"/>
+        <ellipse cx="105" cy="96" rx="13" ry="7" fill="#ffb3ba" opacity="0.7"/>
+
+        <!-- 左眼 -->
+        <ellipse cx="63" cy="82" rx="11" ry="13" fill="white" stroke="#111" stroke-width="2"/>
+        <circle cx="63" cy="84" r="8" fill="#7b4a25"/>
+        <circle cx="63" cy="84" r="4.5" fill="#1a0800"/>
+        <circle cx="59" cy="80" r="3" fill="white"/>
+        <circle cx="66" cy="87" r="1.8" fill="white"/>
+        <path d="M52 72 Q63 68 74 72" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 右眼 -->
+        <ellipse cx="97" cy="82" rx="11" ry="13" fill="white" stroke="#111" stroke-width="2"/>
+        <circle cx="97" cy="84" r="8" fill="#7b4a25"/>
+        <circle cx="97" cy="84" r="4.5" fill="#1a0800"/>
+        <circle cx="93" cy="80" r="3" fill="white"/>
+        <circle cx="100" cy="87" r="1.8" fill="white"/>
+        <path d="M86 72 Q97 68 108 72" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 眉毛 -->
+        <path d="M52 68 Q63 63 74 68" stroke="#3d1f0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M86 68 Q97 63 108 68" stroke="#3d1f0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 鼻子 -->
+        <path d="M77 94 Q80 99 83 94" stroke="#c4885a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 嘴巴（微笑） -->
+        <path d="M70 106 Q80 114 90 106" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+        <!-- 頸部 -->
+        <rect x="71" y="122" width="18" height="14" rx="5" fill="#ffd5a8" stroke="#111" stroke-width="1.5"/>
+
+        <!-- 身體（洋裝） -->
+        <path d="M30 148 Q36 132 71 128 L89 128 Q114 132 130 148 L132 192 Q80 200 28 192Z" fill="#f9a8d4" stroke="#111" stroke-width="2.5"/>
+        <path d="M71 128 Q80 140 89 128" stroke="#111" stroke-width="1.5" fill="none"/>
+        <path d="M30 178 Q80 186 132 178" stroke="#f472b6" stroke-width="2" fill="none"/>
+
+        <!-- 左手臂 -->
+        <path d="M34 152 Q18 162 16 180 Q21 186 28 181 Q32 165 38 157Z" fill="#ffd5a8" stroke="#111" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="20" cy="184" r="9" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+        <!-- 右手臂 -->
+        <path d="M126 152 Q142 162 144 180 Q139 186 132 181 Q128 165 122 157Z" fill="#ffd5a8" stroke="#111" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="140" cy="184" r="9" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+
+        <!-- 腿 -->
+        <ellipse cx="62" cy="204" rx="11" ry="15" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
+        <ellipse cx="98" cy="204" rx="11" ry="15" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
+        <!-- 鞋子（紫色） -->
+        <ellipse cx="62" cy="216" rx="15" ry="8" fill="#7c3aed" stroke="#111" stroke-width="2"/>
+        <ellipse cx="98" cy="216" rx="15" ry="8" fill="#7c3aed" stroke="#111" stroke-width="2"/>
+
       </svg>
+
       <div class="bubble think">好像哪裡怪怪的…</div>
     </div>
 
-    <!-- 格2：驗孕棒 -->
+    <!-- ===== PANEL 2: 驗孕棒特寫 ===== -->
     <div class="panel">
-      <!-- 驗孕棒特寫 SVG -->
-      <svg width="100" height="130" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 手 -->
-        <path d="M30 90 Q28 80 32 70 L36 60 Q38 55 42 57 Q44 52 48 54 Q50 49 54 52 Q58 50 59 55 L60 90 Q55 95 45 96 Q35 96 30 90Z" fill="#ffe0c0" stroke="#111" stroke-width="2"/>
+      <div class="caption">等待的三分鐘，像三個小時…</div>
+
+      <svg width="160" height="200" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- 手（拿著驗孕棒） -->
+        <path d="M38 108 Q35 90 40 72 L46 54 Q49 47 55 50 Q57 44 63 47 Q66 41 71 44 Q76 42 78 48 L80 108 Q72 116 58 116 Q44 116 38 108Z" fill="#ffd5a8" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
         <!-- 手指分線 -->
-        <line x1="42" y1="57" x2="41" y2="75" stroke="#111" stroke-width="1.2"/>
-        <line x1="48" y1="54" x2="47" y2="75" stroke="#111" stroke-width="1.2"/>
-        <line x1="54" y1="52" x2="53" y2="75" stroke="#111" stroke-width="1.2"/>
-        <!-- 驗孕棒主體 -->
-        <rect x="36" y="95" width="28" height="12" rx="6" fill="#f0f0f0" stroke="#111" stroke-width="2"/>
-        <rect x="64" y="98" width="20" height="6" rx="3" fill="#e0e0e0" stroke="#111" stroke-width="1.5"/>
-        <!-- 結果窗 -->
-        <rect x="39" y="98" width="22" height="6" rx="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
-        <!-- 兩條線！ -->
-        <line x1="47" y1="99.5" x2="47" y2="102.5" stroke="#e84393" stroke-width="3" stroke-linecap="round"/>
-        <line x1="53" y1="99.5" x2="53" y2="102.5" stroke="#e84393" stroke-width="3" stroke-linecap="round"/>
-        <!-- 放大標示 -->
-        <circle cx="50" cy="101" r="18" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="3 2"/>
-        <text x="50" y="30" text-anchor="middle" font-size="11" font-weight="bold" fill="#e84393">兩條線！</text>
-        <line x1="50" y1="33" x2="50" y2="83" stroke="#e84393" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <line x1="55" y1="50" x2="54" y2="74" stroke="#c4885a" stroke-width="1.5"/>
+        <line x1="63" y1="47" x2="62" y2="74" stroke="#c4885a" stroke-width="1.5"/>
+        <line x1="71" y1="44" x2="70" y2="74" stroke="#c4885a" stroke-width="1.5"/>
+        <!-- 手指甲 -->
+        <ellipse cx="42" cy="62" rx="4" ry="3" fill="#ffcdd2" stroke="#c4885a" stroke-width="1"/>
+        <ellipse cx="55" cy="56" rx="4" ry="3" fill="#ffcdd2" stroke="#c4885a" stroke-width="1"/>
+        <ellipse cx="63" cy="53" rx="4" ry="3" fill="#ffcdd2" stroke="#c4885a" stroke-width="1"/>
+        <ellipse cx="71" cy="50" rx="4" ry="3" fill="#ffcdd2" stroke="#c4885a" stroke-width="1"/>
+
+        <!-- 驗孕棒 -->
+        <rect x="34" y="116" width="52" height="20" rx="10" fill="#f5f5f5" stroke="#111" stroke-width="2.5"/>
+        <rect x="86" y="120" width="36" height="12" rx="6" fill="#e8e8e8" stroke="#111" stroke-width="2"/>
+        <!-- 結果窗口 -->
+        <rect x="38" y="119" width="40" height="14" rx="4" fill="white" stroke="#ddd" stroke-width="1.5"/>
+
+        <!-- 兩條粉紅線！！ -->
+        <line x1="52" y1="121" x2="52" y2="131" stroke="#e84393" stroke-width="5" stroke-linecap="round"/>
+        <line x1="62" y1="121" x2="62" y2="131" stroke="#e84393" stroke-width="5" stroke-linecap="round"/>
+
+        <!-- 放大鏡圓 -->
+        <circle cx="58" cy="126" r="30" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="5 3"/>
+
+        <!-- 放大後的兩條線標示 -->
+        <text x="80" y="168" text-anchor="middle" font-size="13" font-weight="900" fill="#e84393">兩條線！</text>
+        <line x1="58" y1="156" x2="72" y2="164" stroke="#e84393" stroke-width="1.5" stroke-dasharray="3 2"/>
+
+        <!-- 計時器裝飾 -->
+        <text x="120" y="80" text-anchor="middle" font-size="26">⏳</text>
+        <text x="120" y="105" text-anchor="middle" font-size="9" fill="#888">3:00</text>
       </svg>
-      <div class="bubble think">等…等一下…</div>
+
+      <div class="bubble think">等⋯等一下⋯</div>
     </div>
 
-    <!-- 格3（寬格）：驚嚇反應 -->
+    <!-- ===== PANEL 3 (寬格): 驚嚇反應 ===== -->
     <div class="panel wide">
+
       <!-- 驚嚇媽媽 SVG -->
-      <svg width="130" height="140" viewBox="0 0 130 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 放射線（shock lines） -->
-        <line x1="65" y1="55" x2="10" y2="10" stroke="#111" stroke-width="2"/>
-        <line x1="65" y1="55" x2="120" y2="10" stroke="#111" stroke-width="2"/>
-        <line x1="65" y1="55" x2="5" y2="55" stroke="#111" stroke-width="2"/>
-        <line x1="65" y1="55" x2="125" y2="55" stroke="#111" stroke-width="2"/>
-        <line x1="65" y1="55" x2="15" y2="100" stroke="#111" stroke-width="2"/>
-        <line x1="65" y1="55" x2="115" y2="100" stroke="#111" stroke-width="2"/>
+      <svg width="200" height="230" viewBox="0 0 200 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- 放射衝擊線 -->
+        <g stroke="#111" stroke-width="2.5" stroke-linecap="round">
+          <line x1="100" y1="30" x2="100" y2="2"/>
+          <line x1="130" y1="36" x2="150" y2="12"/>
+          <line x1="150" y1="62" x2="178" y2="50"/>
+          <line x1="70"  y1="36" x2="50"  y2="12"/>
+          <line x1="50"  y1="62" x2="22"  y2="50"/>
+          <line x1="160" y1="95" x2="190" y2="90"/>
+          <line x1="40"  y1="95" x2="10"  y2="90"/>
+          <line x1="155" y1="120" x2="186" y2="125"/>
+          <line x1="45"  y1="120" x2="14"  y2="125"/>
+        </g>
+
+        <!-- 頭髮後層 -->
+        <path d="M52 100 Q56 54 100 50 Q144 54 148 100" fill="#3d1f0a"/>
+        <!-- 側丸子頭 -->
+        <circle cx="151" cy="85" r="18" fill="#3d1f0a" stroke="#111" stroke-width="2"/>
+        <circle cx="151" cy="85" r="11" fill="#5c300f"/>
+        <path d="M141 73 Q151 67 161 73" stroke="#7a4520" stroke-width="2" fill="none"/>
+
         <!-- 頭 -->
-        <circle cx="65" cy="52" r="20" fill="#ffe0c0" stroke="#111" stroke-width="2.5"/>
-        <!-- 頭髮 -->
-        <path d="M45 46 Q48 28 65 28 Q82 28 85 46" fill="#4a2f1a" stroke="#4a2f1a" stroke-width="1"/>
-        <path d="M45 46 Q43 56 46 64" stroke="#4a2f1a" stroke-width="5" stroke-linecap="round"/>
-        <path d="M85 46 Q87 56 84 64" stroke="#4a2f1a" stroke-width="5" stroke-linecap="round"/>
-        <!-- 驚嚇眼睛（大圓眼） -->
-        <circle cx="58" cy="50" r="5" fill="#fff" stroke="#111" stroke-width="1.5"/>
-        <circle cx="72" cy="50" r="5" fill="#fff" stroke="#111" stroke-width="1.5"/>
-        <circle cx="58" cy="51" r="2.5" fill="#111"/>
-        <circle cx="72" cy="51" r="2.5" fill="#111"/>
-        <!-- 張嘴 -->
-        <ellipse cx="65" cy="60" rx="6" ry="5" fill="#c0392b" stroke="#111" stroke-width="1.5"/>
-        <!-- 身體 -->
-        <path d="M48 72 Q50 100 50 110 L80 110 Q80 100 82 72 Q74 68 65 68 Q56 68 48 72Z" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
-        <!-- 雙手舉起 -->
-        <path d="M48 78 Q38 68 30 62" stroke="#ffe0c0" stroke-width="8" stroke-linecap="round"/>
-        <path d="M82 78 Q92 68 100 62" stroke="#ffe0c0" stroke-width="8" stroke-linecap="round"/>
-        <!-- 手掌 -->
-        <circle cx="29" cy="61" r="7" fill="#ffe0c0" stroke="#111" stroke-width="2"/>
-        <circle cx="101" cy="61" r="7" fill="#ffe0c0" stroke="#111" stroke-width="2"/>
+        <circle cx="100" cy="96" r="44" fill="#ffd5a8" stroke="#111" stroke-width="2.5"/>
+
+        <!-- 耳朵 -->
+        <ellipse cx="56" cy="98" rx="8" ry="11" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+        <ellipse cx="144" cy="98" rx="8" ry="11" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+
+        <!-- 前瀏海 -->
+        <path d="M58 82 Q64 56 80 62 Q88 50 100 56 Q112 50 120 62 Q136 56 142 82" fill="#3d1f0a"/>
+
+        <!-- 臉頰紅暈 -->
+        <ellipse cx="74" cy="110" rx="14" ry="8" fill="#ffb3ba" opacity="0.75"/>
+        <ellipse cx="126" cy="110" rx="14" ry="8" fill="#ffb3ba" opacity="0.75"/>
+
+        <!-- 左眼（驚嚇：超大） -->
+        <ellipse cx="80" cy="92" rx="15" ry="17" fill="white" stroke="#111" stroke-width="2.5"/>
+        <circle cx="80" cy="94" r="11" fill="#7b4a25"/>
+        <circle cx="80" cy="94" r="6.5" fill="#1a0800"/>
+        <circle cx="74" cy="88" r="4" fill="white"/>
+        <circle cx="83" cy="98" r="2.5" fill="white"/>
+        <!-- 驚嚇粗上睫線 -->
+        <path d="M65 78 Q80 73 95 78" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+        <!-- 右眼（驚嚇：超大） -->
+        <ellipse cx="120" cy="92" rx="15" ry="17" fill="white" stroke="#111" stroke-width="2.5"/>
+        <circle cx="120" cy="94" r="11" fill="#7b4a25"/>
+        <circle cx="120" cy="94" r="6.5" fill="#1a0800"/>
+        <circle cx="114" cy="88" r="4" fill="white"/>
+        <circle cx="123" cy="98" r="2.5" fill="white"/>
+        <path d="M105 78 Q120 73 135 78" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+        <!-- 眉毛（高飛上去！） -->
+        <path d="M64 66 Q80 58 96 66" stroke="#3d1f0a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M104 66 Q120 58 136 66" stroke="#3d1f0a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 鼻子 -->
+        <path d="M97 108 Q100 113 103 108" stroke="#c4885a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+        <!-- 嘴巴（大O，驚叫） -->
+        <ellipse cx="100" cy="124" rx="13" ry="15" fill="#c0392b" stroke="#111" stroke-width="2.5"/>
+        <ellipse cx="100" cy="120" rx="9" ry="5" fill="#e07070"/>
+        <!-- 牙齒 -->
+        <rect x="93" y="115" width="6" height="6" rx="1" fill="white"/>
+        <rect x="101" y="115" width="6" height="6" rx="1" fill="white"/>
+
+        <!-- 汗滴 -->
+        <path d="M142 74 Q145 68 148 74 Q147 80 142 74Z" fill="#7dd3fc" stroke="#111" stroke-width="1.5"/>
+
+        <!-- 頸部 -->
+        <rect x="91" y="138" width="18" height="14" rx="5" fill="#ffd5a8" stroke="#111" stroke-width="1.5"/>
+
+        <!-- 身體（洋裝） -->
+        <path d="M50 165 Q56 148 91 144 L109 144 Q134 148 150 165 L152 208 Q100 216 48 208Z" fill="#f9a8d4" stroke="#111" stroke-width="2.5"/>
+        <path d="M91 144 Q100 156 109 144" stroke="#111" stroke-width="1.5" fill="none"/>
+
+        <!-- 手臂（舉起來！） -->
+        <path d="M54 168 Q28 144 18 118 Q24 110 30 116 Q42 138 52 158Z" fill="#ffd5a8" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="17" cy="114" r="11" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+        <path d="M146 168 Q172 144 182 118 Q176 110 170 116 Q158 138 148 158Z" fill="#ffd5a8" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="183" cy="114" r="11" fill="#ffd5a8" stroke="#111" stroke-width="2"/>
+
+        <!-- 腿 -->
+        <ellipse cx="78" cy="218" rx="12" ry="14" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
+        <ellipse cx="122" cy="218" rx="12" ry="14" fill="#f9a8d4" stroke="#111" stroke-width="2"/>
+        <!-- 鞋子（紫色，招牌） -->
+        <ellipse cx="78" cy="228" rx="16" ry="8" fill="#7c3aed" stroke="#111" stroke-width="2"/>
+        <ellipse cx="122" cy="228" rx="16" ry="8" fill="#7c3aed" stroke="#111" stroke-width="2"/>
+
+        <!-- 掉落的驗孕棒 -->
+        <g transform="translate(30,190) rotate(35)">
+          <rect x="0" y="0" width="30" height="10" rx="5" fill="#f5f5f5" stroke="#111" stroke-width="1.5"/>
+          <rect x="3" y="1" width="20" height="8" rx="2" fill="white"/>
+          <line x1="9" y1="2" x2="9" y2="8" stroke="#e84393" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="14" y1="2" x2="14" y2="8" stroke="#e84393" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+
       </svg>
 
-      <div style="display:flex; flex-direction:column; gap:0.8rem; align-items:flex-start;">
-        <div class="sfx">WHAT—！</div>
+      <!-- 文字區 -->
+      <div style="display:flex; flex-direction:column; gap:0.9rem; align-items:flex-start; z-index:1;">
+        <div class="sfx" style="font-size:2.4rem;">WHAT—！</div>
         <div class="bubble shout">兩條線！！！<br/>我懷孕了！？</div>
-        <div class="caption">（驗孕棒掉到地上）</div>
-        <div class="sfx" style="font-size:1rem; transform:rotate(2deg);">咚！</div>
+        <div style="font-size:0.78rem; color:#888; font-style:italic;">（驗孕棒掉到地上）</div>
+        <div class="sfx" style="font-size:1.1rem; transform:rotate(3deg); color:#e84393;">咚！</div>
       </div>
+
     </div>
 
   </div>
