@@ -229,7 +229,8 @@ def chat():
 
     api_key = os.environ.get(prov_info["env_var"], "")
     if not api_key:
-        return jsonify({"error": f"{prov_info['env_var']} is not set on the server."}), 500
+        all_vars = [k for k in os.environ.keys() if not k.startswith("_")]
+        return jsonify({"error": f"{prov_info['env_var']} is not set. Available env vars: {all_vars}"}), 500
 
     sid      = session.setdefault("sid", secrets.token_hex(16))
     sess     = _sessions.setdefault(sid, {"provider": provider, "history": []})
