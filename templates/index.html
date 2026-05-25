@@ -331,7 +331,7 @@
   <h1>Stock Investment <span>Agent</span></h1>
   <select id="provider-select" onchange="onProviderChange()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
     {% for key, p in providers.items() %}
-    <option value="{{ key }}">{{ p.icon }} {{ p.name }}</option>
+    <option value="{{ key }}" {% if key == "DeepSeek" %}selected{% endif %}>{{ p.icon }} {{ p.name }}</option>
     {% endfor %}
   </select>
   <select id="model-select" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;max-width:160px;"></select>
