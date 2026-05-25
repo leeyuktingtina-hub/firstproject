@@ -435,6 +435,7 @@
       `Set <code>${prov.env_var}</code> in Railway Variables`;
   }
 
+  document.getElementById('provider-select').value = 'DeepSeek';
   onProviderChange();  // initialise on load
 
   function getSelectedProvider() { return document.getElementById('provider-select').value; }
