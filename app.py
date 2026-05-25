@@ -219,6 +219,10 @@ def chat():
     user_message = (data.get("message") or "").strip()
     provider     = data.get("provider", "Anthropic")
     model_name   = data.get("model",    "claude-sonnet-4-6")
+    lang         = data.get("lang",     "en")
+
+    if lang == "zh":
+        user_message = "请用中文回答。\n" + user_message
 
     if not user_message:
         return jsonify({"error": "Empty message"}), 400

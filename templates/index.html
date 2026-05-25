@@ -45,14 +45,18 @@
   .logo { font-size: 20px; }
   header h1 { font-size: 16px; font-weight: 600; flex: 1; }
   header h1 span { color: var(--green); }
-  .header-badge {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 20px;
-    background: var(--green-dim);
-    color: var(--green);
-    border: 1px solid var(--green);
+  #lang-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 600;
   }
+  #lang-btn:hover { border-color: var(--cyan); background: #1f3a5f33; }
   #reset-btn {
     background: none;
     border: 1px solid var(--border);
@@ -328,13 +332,14 @@
 
 <header>
   <span class="logo">📈</span>
-  <h1>Stock Investment <span>Agent</span></h1>
+  <h1 id="page-title">Stock Investment <span>Agent</span></h1>
   <select id="provider-select" onchange="onProviderChange()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
     {% for key, p in providers.items() %}
     <option value="{{ key }}" {% if key == "DeepSeek" %}selected{% endif %}>{{ p.icon }} {{ p.name }}</option>
     {% endfor %}
   </select>
   <select id="model-select" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;max-width:160px;"></select>
+  <button id="lang-btn" onclick="toggleLang()">中文</button>
   <button id="reset-btn" onclick="resetChat()">New Chat</button>
 </header>
 
@@ -343,37 +348,37 @@
   <!-- Sidebar -->
   <aside>
     <div class="sidebar-section">
-      <h2>Quick Actions</h2>
-      <button class="quick-btn" onclick="sendQuick('Screen the full watchlist for buying opportunities right now')">
-        <span class="icon">🔍</span>Screen Watchlist
+      <h2 id="qa-title">Quick Actions</h2>
+      <button class="quick-btn" id="btn-screen" onclick="sendQuick('screen')">
+        <span class="icon">🔍</span><span id="btn-screen-text">Screen Watchlist</span>
       </button>
-      <button class="quick-btn" onclick="sendQuick('Give me a market overview — S&P 500, NASDAQ, VIX, and tech ETFs')">
-        <span class="icon">🌐</span>Market Overview
+      <button class="quick-btn" id="btn-market" onclick="sendQuick('market')">
+        <span class="icon">🌐</span><span id="btn-market-text">Market Overview</span>
       </button>
-      <button class="quick-btn" onclick="sendQuick('Which AI stocks look most oversold or at a good entry point?')">
-        <span class="icon">🤖</span>AI Stock Picks
+      <button class="quick-btn" id="btn-ai" onclick="sendQuick('ai')">
+        <span class="icon">🤖</span><span id="btn-ai-text">AI Stock Picks</span>
       </button>
-      <button class="quick-btn" onclick="sendQuick('I feel like panic selling after a drop. What should I do?')">
-        <span class="icon">🧘</span>Calm My Nerves
+      <button class="quick-btn" id="btn-calm" onclick="sendQuick('calm')">
+        <span class="icon">🧘</span><span id="btn-calm-text">Calm My Nerves</span>
       </button>
-      <button class="quick-btn" onclick="sendQuick('I made 10% on a stock. Should I sell now or hold longer?')">
-        <span class="icon">💰</span>Hold vs Sell?
+      <button class="quick-btn" id="btn-hold" onclick="sendQuick('hold')">
+        <span class="icon">💰</span><span id="btn-hold-text">Hold vs Sell?</span>
       </button>
     </div>
 
     <div class="sidebar-section">
-      <h2>Watchlist — tap to analyse</h2>
+      <h2 id="watchlist-title">Watchlist — tap to analyse</h2>
       <div class="watchlist-chips">
         {% for ticker in watchlist %}
-        <span class="chip" onclick="sendQuick('Give me a detailed analysis of {{ ticker }}')">{{ ticker }}</span>
+        <span class="chip" onclick="sendTickerAnalysis('{{ ticker }}')">{{ ticker }}</span>
         {% endfor %}
       </div>
     </div>
 
     <div class="sidebar-section">
-      <h2>Check Portfolio</h2>
+      <h2 id="portfolio-section-title">Check Portfolio</h2>
       <button class="quick-btn" onclick="openPortfolio()">
-        <span class="icon">📊</span>Enter My Holdings
+        <span class="icon">📊</span><span id="btn-portfolio-text">Enter My Holdings</span>
       </button>
     </div>
 
@@ -386,8 +391,8 @@
         <div class="avatar bot">🤖</div>
         <div class="bubble">
           <div class="welcome">
-            <h2>Your Personal Investment Agent</h2>
-            <p>I monitor AI &amp; tech stocks, identify buying opportunities with technical analysis, and help you invest with discipline — so you stop buying at highs and panic-selling at lows.<br><br>
+            <h2 id="welcome-title">Your Personal Investment Agent</h2>
+            <p id="welcome-text">I monitor AI &amp; tech stocks, identify buying opportunities with technical analysis, and help you invest with discipline — so you stop buying at highs and panic-selling at lows.<br><br>
             Use the quick actions on the left, tap a ticker to analyse it, or just ask me anything.</p>
           </div>
         </div>
@@ -399,7 +404,7 @@
         <textarea id="input" placeholder="Ask about any stock, your portfolio, or the market…" rows="1"></textarea>
         <button id="send-btn" onclick="sendMessage()" title="Send (Enter)">&#10148;</button>
       </div>
-      <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+      <div class="hint" id="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
     </div>
   </main>
 </div>
@@ -407,13 +412,13 @@
 <!-- Portfolio modal -->
 <div id="portfolio-modal" style="display:none; position:fixed; inset:0; background:#000a; z-index:100; align-items:center; justify-content:center;">
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; width:480px; max-width:95vw;">
-    <h3 style="margin-bottom:12px; color:var(--green);">📊 Enter Your Holdings</h3>
-    <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">One position per line: <code>TICKER SHARES AVG_COST</code></p>
+    <h3 id="modal-title" style="margin-bottom:12px; color:var(--green);">📊 Enter Your Holdings</h3>
+    <p id="modal-desc" style="font-size:13px; color:var(--muted); margin-bottom:16px;">One position per line: <code>TICKER SHARES AVG_COST</code></p>
     <textarea id="portfolio-input" rows="6" placeholder="NVDA 10 500&#10;MSFT 5 380&#10;AMD 20 140"
       style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px; font-family:monospace; font-size:13px; resize:vertical;"></textarea>
     <div style="display:flex; gap:10px; margin-top:14px; justify-content:flex-end;">
-      <button onclick="closePortfolio()" style="background:none; border:1px solid var(--border); color:var(--muted); padding:7px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
-      <button onclick="submitPortfolio()" style="background:var(--green); color:#000; border:none; padding:7px 16px; border-radius:6px; font-weight:600; cursor:pointer;">Analyse</button>
+      <button id="modal-cancel" onclick="closePortfolio()" style="background:none; border:1px solid var(--border); color:var(--muted); padding:7px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
+      <button id="modal-analyse" onclick="submitPortfolio()" style="background:var(--green); color:#000; border:none; padding:7px 16px; border-radius:6px; font-weight:600; cursor:pointer;">Analyse</button>
     </div>
   </div>
 </div>
@@ -423,6 +428,108 @@
   const sendBtn = document.getElementById('send-btn');
   const msgBox  = document.getElementById('messages');
 
+  // ── Language ──────────────────────────────────────────────────────────────
+  const TRANSLATIONS = {
+    en: {
+      pageTitle:           'Stock Investment <span>Agent</span>',
+      langBtn:             '中文',
+      resetBtn:            'New Chat',
+      qaTitle:             'Quick Actions',
+      btnScreen:           'Screen Watchlist',
+      btnMarket:           'Market Overview',
+      btnAi:               'AI Stock Picks',
+      btnCalm:             'Calm My Nerves',
+      btnHold:             'Hold vs Sell?',
+      watchlistTitle:      'Watchlist — tap to analyse',
+      portfolioSection:    'Check Portfolio',
+      btnPortfolio:        'Enter My Holdings',
+      welcomeTitle:        'Your Personal Investment Agent',
+      welcomeText:         'I monitor AI &amp; tech stocks, identify buying opportunities with technical analysis, and help you invest with discipline — so you stop buying at highs and panic-selling at lows.<br><br>Use the quick actions on the left, tap a ticker to analyse it, or just ask me anything.',
+      placeholder:         'Ask about any stock, your portfolio, or the market…',
+      hint:                'Enter to send &nbsp;·&nbsp; Shift+Enter for new line',
+      modalTitle:          '📊 Enter Your Holdings',
+      modalDesc:           'One position per line: <code>TICKER SHARES AVG_COST</code>',
+      modalCancel:         'Cancel',
+      modalAnalyse:        'Analyse',
+      resetMsg:            '🔄 Chat reset. Ask me anything!',
+      msgScreen:           'Screen the full watchlist for buying opportunities right now',
+      msgMarket:           'Give me a market overview — S&P 500, NASDAQ, VIX, and tech ETFs',
+      msgAi:               'Which AI stocks look most oversold or at a good entry point?',
+      msgCalm:             'I feel like panic selling after a drop. What should I do?',
+      msgHold:             'I made 10% on a stock. Should I sell now or hold longer?',
+      msgPortfolio:        'Analyse my portfolio: {holdings}. Should I hold, add, or trim any positions?',
+      msgTicker:           'Give me a detailed analysis of {ticker}',
+    },
+    zh: {
+      pageTitle:           '股票投资 <span>助手</span>',
+      langBtn:             'English',
+      resetBtn:            '新对话',
+      qaTitle:             '快捷操作',
+      btnScreen:           '筛选观察列表',
+      btnMarket:           '市场概览',
+      btnAi:               'AI 选股',
+      btnCalm:             '情绪管理',
+      btnHold:             '持有还是卖出？',
+      watchlistTitle:      '观察列表 — 点击分析',
+      portfolioSection:    '检查持仓',
+      btnPortfolio:        '输入我的持仓',
+      welcomeTitle:        '您的个人投资助手',
+      welcomeText:         '我监控 AI 与科技股，利用技术分析识别买入机会，帮助您理性投资——不再高点追涨、低点恐慌抛售。<br><br>使用左侧快捷操作，点击股票代码进行分析，或直接向我提问。',
+      placeholder:         '询问任何股票、您的持仓或市场情况……',
+      hint:                '回车发送 &nbsp;·&nbsp; Shift+回车换行',
+      modalTitle:          '📊 输入您的持仓',
+      modalDesc:           '每行一个持仓：<code>股票代码 股数 平均成本</code>',
+      modalCancel:         '取消',
+      modalAnalyse:        '分析',
+      resetMsg:            '🔄 对话已重置，请继续提问！',
+      msgScreen:           '请用中文：现在筛选全部观察列表中的买入机会',
+      msgMarket:           '请用中文：给我一个市场概览——标普500、纳斯达克、VIX和科技ETF',
+      msgAi:               '请用中文：哪些AI股票目前最超卖或处于好的入场点？',
+      msgCalm:             '请用中文：股价大跌后我想恐慌性卖出，我该怎么办？',
+      msgHold:             '请用中文：我在某只股票上赚了10%，现在应该卖出还是继续持有？',
+      msgPortfolio:        '请用中文分析我的持仓：{holdings}。我应该持有、加仓还是减仓？',
+      msgTicker:           '请用中文详细分析 {ticker}',
+    },
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'en';
+
+  function applyLang(lang) {
+    const t = TRANSLATIONS[lang];
+    document.getElementById('page-title').innerHTML        = t.pageTitle;
+    document.getElementById('lang-btn').textContent        = t.langBtn;
+    document.getElementById('reset-btn').textContent       = t.resetBtn;
+    document.getElementById('qa-title').textContent        = t.qaTitle;
+    document.getElementById('btn-screen-text').textContent = t.btnScreen;
+    document.getElementById('btn-market-text').textContent = t.btnMarket;
+    document.getElementById('btn-ai-text').textContent     = t.btnAi;
+    document.getElementById('btn-calm-text').textContent   = t.btnCalm;
+    document.getElementById('btn-hold-text').textContent   = t.btnHold;
+    document.getElementById('watchlist-title').textContent = t.watchlistTitle;
+    document.getElementById('portfolio-section-title').textContent = t.portfolioSection;
+    document.getElementById('btn-portfolio-text').textContent = t.btnPortfolio;
+    document.getElementById('welcome-title').textContent   = t.welcomeTitle;
+    document.getElementById('welcome-text').innerHTML      = t.welcomeText;
+    document.getElementById('input-hint').innerHTML        = t.hint;
+    document.getElementById('modal-title').textContent     = t.modalTitle;
+    document.getElementById('modal-desc').innerHTML        = t.modalDesc;
+    document.getElementById('modal-cancel').textContent    = t.modalCancel;
+    document.getElementById('modal-analyse').textContent   = t.modalAnalyse;
+    input.placeholder = t.placeholder;
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+  }
+
+  function toggleLang() {
+    applyLang(currentLang === 'en' ? 'zh' : 'en');
+  }
+
+  function t(key, vars = {}) {
+    let str = TRANSLATIONS[currentLang][key] || TRANSLATIONS.en[key] || key;
+    for (const [k, v] of Object.entries(vars)) str = str.replace(`{${k}}`, v);
+    return str;
+  }
+
   // ── Provider / model selector ─────────────────────────────────────────────
   const PROVIDERS = {{ providers | tojson }};
 
@@ -431,12 +538,13 @@
     const prov   = PROVIDERS[key];
     const sel    = document.getElementById('model-select');
     sel.innerHTML = prov.models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-    document.getElementById('provider-note').innerHTML =
-      `Set <code>${prov.env_var}</code> in Railway Variables`;
+    document.getElementById('provider-note') &&
+      (document.getElementById('provider-note').innerHTML = `Set <code>${prov.env_var}</code> in Railway Variables`);
   }
 
   document.getElementById('provider-select').value = 'DeepSeek';
-  onProviderChange();  // initialise on load
+  onProviderChange();
+  applyLang(currentLang);
 
   function getSelectedProvider() { return document.getElementById('provider-select').value; }
   function getSelectedModel()    { return document.getElementById('model-select').value; }
@@ -457,39 +565,26 @@
 
   // ── Markdown renderer ─────────────────────────────────────────────────────
   function renderMarkdown(text) {
-    // Escape HTML first
     let html = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    // Code blocks
     html = html.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) =>
       `<pre><code>${code.trim()}</code></pre>`);
-
-    // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Headers
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.+)$/gm,  '<h3>$1</h3>');
     html = html.replace(/^# (.+)$/gm,   '<h3>$1</h3>');
-
-    // Bold
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/__([^_]+)__/g,      '<strong>$1</strong>');
-
-    // Italic
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     html = html.replace(/_([^_]+)_/g,   '<em>$1</em>');
-
-    // Horizontal rules
     html = html.replace(/^---+$/gm, '<hr>');
 
-    // Tables (simple: | col | col |)
     html = html.replace(/((?:^\|.+\|\n?)+)/gm, tableStr => {
       const rows = tableStr.trim().split('\n')
-        .filter(r => !/^\|[-: |]+\|$/.test(r)); // remove separator row
+        .filter(r => !/^\|[-: |]+\|$/.test(r));
       if (rows.length < 1) return tableStr;
       let out = '<table>';
       rows.forEach((row, i) => {
@@ -500,26 +595,22 @@
       return out + '</table>';
     });
 
-    // Unordered lists
     html = html.replace(/((?:^[*\-] .+\n?)+)/gm, block => {
       const items = block.trim().split('\n')
         .map(l => `<li>${l.replace(/^[*\-] /, '')}</li>`).join('');
       return `<ul>${items}</ul>`;
     });
 
-    // Ordered lists
     html = html.replace(/((?:^\d+\. .+\n?)+)/gm, block => {
       const items = block.trim().split('\n')
         .map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
       return `<ol>${items}</ol>`;
     });
 
-    // BUY / HOLD / AVOID colour badges
     html = html.replace(/\b(BUY|STRONG BUY)\b/g, '<span class="badge-buy">$1</span>');
     html = html.replace(/\b(HOLD|ACCUMULATE)\b/g, '<span class="badge-hold">$1</span>');
     html = html.replace(/\b(AVOID|SELL|OVERBOUGHT)\b/g, '<span class="badge-avoid">$1</span>');
 
-    // Paragraphs (double newline → <p>)
     html = html
       .split(/\n{2,}/)
       .map(p => p.trim())
@@ -580,13 +671,18 @@
     sendBtn.disabled = true;
 
     appendMsg('user', msg);
-    const typingEl = showTyping();
+    showTyping();
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, provider: getSelectedProvider(), model: getSelectedModel() }),
+        body: JSON.stringify({
+          message:  msg,
+          provider: getSelectedProvider(),
+          model:    getSelectedModel(),
+          lang:     currentLang,
+        }),
       });
       const data = await res.json();
       removeTyping();
@@ -598,20 +694,27 @@
       }
     } catch (err) {
       removeTyping();
-      appendMsg('bot', '⚠️ Could not reach the server. Is the Flask app running?', false);
+      appendMsg('bot', '⚠️ Could not reach the server.', false);
     } finally {
       sendBtn.disabled = false;
       input.focus();
     }
   }
 
-  function sendQuick(text) { sendMessage(text); }
+  const QUICK_KEYS = ['screen', 'market', 'ai', 'calm', 'hold'];
+  function sendQuick(key) {
+    sendMessage(t('msg' + key.charAt(0).toUpperCase() + key.slice(1)));
+  }
+
+  function sendTickerAnalysis(ticker) {
+    sendMessage(t('msgTicker', { ticker }));
+  }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
   async function resetChat() {
     await fetch('/api/reset', { method: 'POST' });
     msgBox.innerHTML = '';
-    appendMsg('bot', '🔄 Chat reset. Ask me anything!', false);
+    appendMsg('bot', t('resetMsg'), false);
   }
 
   // ── Portfolio modal ───────────────────────────────────────────────────────
@@ -633,10 +736,9 @@
     if (!holdings.length) { alert('Please enter at least one valid position.'); return; }
     closePortfolio();
     const summary = holdings.map(h => `${h.ticker} × ${h.shares} shares @ $${h.avg_cost}`).join(', ');
-    sendMessage(`Analyse my portfolio: ${summary}. Should I hold, add, or trim any positions?`);
+    sendMessage(t('msgPortfolio', { holdings: summary }));
   }
 
-  // Close modal on backdrop click
   document.getElementById('portfolio-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('portfolio-modal')) closePortfolio();
   });
