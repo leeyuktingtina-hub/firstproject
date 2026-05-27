@@ -27,6 +27,7 @@ from investment_agent import (
     DEFAULT_WATCHLIST,
 )
 from backtest import run_backtest
+from quant_scanner import run_scan, UNIVERSE
 
 load_dotenv()
 
@@ -285,8 +286,23 @@ def backtest_run():
     return jsonify(result)
 
 
+@app.route("/scanner")
+def scanner_page():
+    universe_total = sum(len(v) for v in UNIVERSE.values())
+    return render_template("scanner.html", universe_total=universe_total)
+
+
+@app.route("/api/scanner/run", methods=["POST"])
+def scanner_run():
+    data    = request.get_json(force=True) or {}
+    markets = data.get("markets") or None  # None = all markets
+    result  = run_scan(markets)
+    return jsonify(result)
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n  Investment Agent → http://localhost:{port}")
-    print(f"  Backtester      → http://localhost:{port}/backtest\n")
+    print(f"  Backtester      → http://localhost:{port}/backtest")
+    print(f"  Quant Scanner   → http://localhost:{port}/scanner\n")
     app.run(debug=False, host="0.0.0.0", port=port)

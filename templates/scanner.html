@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quant Scanner</title>
+<style>
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --border:   #30363d;
+    --green:    #3fb950;
+    --green-dim:#1a3a24;
+    --cyan:     #58a6ff;
+    --red:      #f85149;
+    --yellow:   #e3b341;
+    --text:     #e6edf3;
+    --muted:    #8b949e;
+    --radius:   10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 18px; font-weight: 700; flex: 1; }
+  header h1 span { color: var(--green); }
+  .nav-link {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all .15s;
+  }
+  .nav-link:hover { color: var(--text); border-color: var(--text); }
+  #scan-btn {
+    background: var(--green);
+    color: #000;
+    font-weight: 700;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  #scan-btn:hover    { opacity: .85; }
+  #scan-btn:disabled { opacity: .5; cursor: default; }
+
+  /* ── Content ── */
+  .content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+  /* ── Summary cards ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .summary-card .val { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .summary-card .lbl { font-size: 12px; color: var(--muted); }
+  .val.buy  { color: var(--green); }
+  .val.hold { color: var(--yellow); }
+  .val.sell { color: var(--red); }
+  .val.scan { color: var(--cyan); }
+
+  /* ── Market filter tabs ── */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .tab:hover  { border-color: var(--cyan); color: var(--cyan); }
+  .tab.active { background: var(--cyan); color: #000; border-color: var(--cyan); font-weight: 600; }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    background: #21262d;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: var(--text); }
+  th.sorted { color: var(--cyan); }
+  td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tr:hover td { background: #21262d44; }
+
+  .rank { color: var(--muted); font-size: 12px; }
+  .ticker { font-weight: 700; font-family: monospace; color: var(--cyan); font-size: 14px; }
+  .market-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .market-US { background: #1f3a5f; color: var(--cyan); }
+  .market-HK { background: #3a1f1f; color: #ff7b72; }
+  .market-CN { background: #3a2a1f; color: #e3b341; }
+
+  .ret.pos { color: var(--green); }
+  .ret.neg { color: var(--red); }
+  .ret.neu { color: var(--muted); }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    min-width: 60px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .3s;
+  }
+  .score-num { font-weight: 700; font-size: 13px; min-width: 30px; }
+
+  .signal {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .signal-BUY  { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .signal-HOLD { background: #3a2f1a; color: var(--yellow); border: 1px solid var(--yellow); }
+  .signal-SELL { background: #3a1a1a; color: var(--red); border: 1px solid var(--red); }
+
+  /* ── Loading ── */
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #empty { display: none; text-align: center; padding: 60px; color: var(--muted); }
+  #scan-time { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
+  /* ── Top picks section ── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span>🔬</span>
+  <h1>Quant <span>Scanner</span></h1>
+  <a href="/" class="nav-link">💬 Chatbot</a>
+  <a href="/backtest" class="nav-link">📈 Backtester</a>
+  <button id="scan-btn" onclick="runScan()">▶ Run Scan</button>
+</header>
+
+<div class="content">
+
+  <!-- Summary cards -->
+  <div class="summary-grid" id="summary" style="display:none">
+    <div class="summary-card">
+      <div class="val scan" id="s-scanned">—</div>
+      <div class="lbl">Stocks Scanned</div>
+    </div>
+    <div class="summary-card">
+      <div class="val buy" id="s-buys">—</div>
+      <div class="lbl">BUY Signals</div>
+    </div>
+    <div class="summary-card">
+      <div class="val hold" id="s-holds">—</div>
+      <div class="lbl">HOLD</div>
+    </div>
+    <div class="summary-card">
+      <div class="val sell" id="s-sells">—</div>
+      <div class="lbl">SELL / Avoid</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <div>Scanning <span id="loading-count">0</span> stocks across US, HK &amp; China…<br>
+    <small>This takes ~20–30 seconds</small></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none">
+    <div id="scan-time"></div>
+
+    <!-- Market tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="filterMarket('ALL')">🌍 All Markets</button>
+      <button class="tab" onclick="filterMarket('US')">🇺🇸 US Tech</button>
+      <button class="tab" onclick="filterMarket('HK')">🇭🇰 Hong Kong</button>
+      <button class="tab" onclick="filterMarket('CN')">🇨🇳 China ADRs</button>
+      <button class="tab" onclick="filterMarket('BUY')">✅ BUY Only</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('_rank')">#</th>
+            <th onclick="sortBy('ticker')">Ticker</th>
+            <th>Market</th>
+            <th onclick="sortBy('price')">Price</th>
+            <th onclick="sortBy('ret_1m')">1M %</th>
+            <th onclick="sortBy('ret_3m')">3M %</th>
+            <th onclick="sortBy('ret_6m')">6M %</th>
+            <th onclick="sortBy('rsi')">RSI</th>
+            <th onclick="sortBy('score')" class="sorted">Score ▼</th>
+            <th>Signal</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="empty">
+    <p>Click <strong>▶ Run Scan</strong> to scan 75 stocks across US, HK &amp; China markets.</p>
+    <p style="margin-top:8px; font-size:12px;">Inspired by AQR Capital's factor investing: Momentum · Technical · Trend</p>
+  </div>
+</div>
+
+<script>
+  let allData    = [];
+  let activeTab  = 'ALL';
+  let sortKey    = 'score';
+  let sortAsc    = false;
+
+  const MARKET_TOTAL = {{ universe_total }};
+
+  document.getElementById('empty').style.display = 'block';
+
+  async function runScan() {
+    const btn = document.getElementById('scan-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Scanning…';
+    document.getElementById('empty').style.display   = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading-count').textContent = MARKET_TOTAL;
+
+    try {
+      const res  = await fetch('/api/scanner/run', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.error) {
+        alert('Scan error: ' + data.error);
+        return;
+      }
+
+      allData = data.all;
+      renderSummary(data);
+      renderTable(allData);
+      document.getElementById('scan-time').textContent = `Last scan: ${data.scanned_at} · ${data.scanned} stocks scored`;
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('summary').style.display = 'grid';
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+      btn.disabled    = false;
+      btn.textContent = '▶ Run Scan';
+    }
+  }
+
+  function renderSummary(data) {
+    document.getElementById('s-scanned').textContent = data.scanned;
+    document.getElementById('s-buys').textContent    = data.buys;
+    document.getElementById('s-holds').textContent   = data.holds;
+    document.getElementById('s-sells').textContent   = data.sells;
+  }
+
+  function filterMarket(market) {
+    activeTab = market;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    let filtered = allData;
+    if (market === 'BUY')                         filtered = allData.filter(r => r.signal === 'BUY');
+    else if (market !== 'ALL')                    filtered = allData.filter(r => r.market === market);
+    renderTable(filtered);
+  }
+
+  function sortBy(key) {
+    if (sortKey === key) { sortAsc = !sortAsc; }
+    else { sortKey = key; sortAsc = false; }
+
+    document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+    event.target.classList.add('sorted');
+
+    let filtered = allData;
+    if (activeTab === 'BUY')       filtered = allData.filter(r => r.signal === 'BUY');
+    else if (activeTab !== 'ALL')  filtered = allData.filter(r => r.market === activeTab);
+    renderTable(filtered);
+  }
+
+  function renderTable(rows) {
+    // Add rank before sorting
+    let sorted = [...rows];
+    if (sortKey !== '_rank') {
+      sorted.sort((a, b) => {
+        const av = a[sortKey], bv = b[sortKey];
+        if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+        return sortAsc ? av - bv : bv - av;
+      });
+    }
+
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = sorted.map((r, i) => {
+      const scoreColor = r.score >= 62 ? '#3fb950' : (r.score <= 38 ? '#f85149' : '#e3b341');
+      const barW = Math.round(r.score) + '%';
+      return `
+        <tr>
+          <td class="rank">${i + 1}</td>
+          <td>
+            <div class="ticker">${r.ticker}</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">${r.name}</div>
+          </td>
+          <td><span class="market-badge market-${r.market}">${r.market}</span></td>
+          <td>${formatPrice(r.price, r.market)}</td>
+          <td class="ret ${retClass(r.ret_1m)}">${r.ret_1m > 0 ? '+' : ''}${r.ret_1m}%</td>
+          <td class="ret ${retClass(r.ret_3m)}">${r.ret_3m > 0 ? '+' : ''}${r.ret_3m}%</td>
+          <td class="ret ${retClass(r.ret_6m)}">${r.ret_6m > 0 ? '+' : ''}${r.ret_6m}%</td>
+          <td style="color:${r.rsi < 30 ? 'var(--green)' : (r.rsi > 70 ? 'var(--red)' : 'var(--text)')}">${r.rsi}</td>
+          <td>
+            <div class="score-bar">
+              <div class="bar-bg"><div class="bar-fill" style="width:${barW}; background:${scoreColor}"></div></div>
+              <span class="score-num" style="color:${scoreColor}">${r.score}</span>
+            </div>
+          </td>
+          <td><span class="signal signal-${r.signal}">${r.signal}</span></td>
+        </tr>`;
+    }).join('');
+  }
+
+  function retClass(v) { return v > 0 ? 'pos' : (v < 0 ? 'neg' : 'neu'); }
+
+  function formatPrice(price, market) {
+    if (market === 'HK') return 'HK$' + price.toLocaleString();
+    return '$' + price.toLocaleString();
+  }
+</script>
+</body>
+</html>
