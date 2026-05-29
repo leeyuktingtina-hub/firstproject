@@ -28,6 +28,7 @@ from investment_agent import (
 )
 from backtest import run_backtest
 from quant_scanner import run_scan, UNIVERSE
+from earnings_tracker import get_earnings_data, LINKAGE_MAP
 
 load_dotenv()
 
@@ -283,6 +284,17 @@ def backtest_run():
         stop_loss     = float(data.get("stop_loss",    0.08)),
         take_profit   = float(data.get("take_profit",  0.25)),
     )
+    return jsonify(result)
+
+
+@app.route("/earnings")
+def earnings_page():
+    return render_template("earnings.html", ticker_count=len(LINKAGE_MAP))
+
+
+@app.route("/api/earnings/data", methods=["POST"])
+def earnings_data():
+    result = get_earnings_data()
     return jsonify(result)
 
 
