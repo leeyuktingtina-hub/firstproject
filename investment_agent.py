@@ -141,10 +141,15 @@ def get_stock_data(ticker: str, period: str = "6mo") -> dict:
         latest_vol = float(hist["Volume"].iloc[-1])
         vol_ratio = latest_vol / avg_vol_20 if avg_vol_20 > 0 else 1.0
 
+        last_data_date = hist.index[-1]
+        data_as_of = last_data_date.strftime("%Y-%m-%d") if hasattr(last_data_date, 'strftime') else str(last_data_date)[:10]
+
         return {
             "ticker": ticker.upper(),
             "name": info.get("shortName", ticker),
             "sector": info.get("sector", "Unknown"),
+            "data_as_of": data_as_of,
+            "data_note": "yfinance daily closing price — NOT real-time. For live prices check your broker app.",
             "price": round(price, 2),
             "change_pct_today": round(change_pct, 2),
             "market_cap_b": round(info.get("marketCap", 0) / 1e9, 1),
@@ -230,7 +235,12 @@ def screen_watchlist(tickers: list[str]) -> dict:
         })
 
     results.sort(key=lambda x: x["buy_score"], reverse=True)
-    return {"screened": len(results), "stocks": results}
+    return {
+        "screened": len(results),
+        "stocks": results,
+        "data_note": "Prices are daily closing prices from yfinance — NOT real-time. Verify live prices before trading.",
+        "screened_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+    }
 
 
 def analyze_portfolio(holdings: list[dict]) -> dict:
@@ -285,6 +295,8 @@ def analyze_portfolio(holdings: list[dict]) -> dict:
         "total_gain_loss": round(total_gain_loss, 2),
         "total_gain_loss_pct": round(total_gain_pct, 1),
         "num_positions": len(portfolio_data),
+        "data_note": "Prices are daily closing prices from yfinance — NOT real-time. Verify live prices before trading.",
+        "analysed_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
     }
 
 
@@ -298,6 +310,7 @@ def get_market_overview() -> dict:
         "AI/Tech ETF": "QQQ",
     }
     results = {}
+    last_date = None
     for name, symbol in indices.items():
         try:
             ticker = yf.Ticker(symbol)
@@ -307,12 +320,20 @@ def get_market_overview() -> dict:
             price = float(hist["Close"].iloc[-1])
             prev = float(hist["Close"].iloc[-2]) if len(hist) > 1 else price
             change = (price - prev) / prev * 100
+            if last_date is None:
+                d = hist.index[-1]
+                last_date = d.strftime("%Y-%m-%d") if hasattr(d, 'strftime') else str(d)[:10]
             results[name] = {
                 "price": round(price, 2),
                 "change_pct": round(change, 2),
             }
         except Exception:
             pass
+    results["_meta"] = {
+        "data_as_of": last_date or "unknown",
+        "data_note": "These are daily CLOSING prices from yfinance — NOT real-time. The price shown is the last market close, NOT the current live price. For real-time prices use your broker app or Yahoo Finance.",
+        "fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+    }
     return results
 
 
@@ -420,7 +441,14 @@ TOOL_MAP = {
 
 SYSTEM_PROMPT = """You are a professional stock investment advisor specialising in medium to long-term investing (holding periods of 6 months to 3+ years), with a focus on AI and technology stocks.
 
-Your job is to help the user make disciplined, data-driven investment decisions. You have access to real-time stock data and technical analysis tools.
+Your job is to help the user make disciplined, data-driven investment decisions. You have access to stock data and technical analysis tools.
+
+**CRITICAL — Data transparency rules you MUST follow:**
+- The data from tools is daily CLOSING prices from yfinance — NOT real-time or live prices
+- Always tell the user: "数据截至 [data_as_of date]，为收盘价，非实时报价" when presenting prices
+- If the user asks about "current price" or "now", remind them this is the last closing price, not live
+- For live prices before trading, always direct them to their broker app or Yahoo Finance
+- You CAN still give valid analysis because trends, RSI, and MAs are based on closing prices and are reliable
 
 **User's investing challenges you must help with:**
 1. They tend to BUY stocks when they are already elevated / overbought — help them identify better entry points
