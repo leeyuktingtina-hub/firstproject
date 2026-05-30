@@ -393,9 +393,8 @@
     });
 
     // ── Benchmark comparison table ──
-    const m       = data.metrics || {};
-    const spyRet  = data.spy_return;
-    const qqqRet  = data.qqq_return;
+    const spyRet   = data.spy_return;
+    const qqqRet   = data.qqq_return;
     const stratRet = m.total_return;
 
     const pct = v => v != null ? (v > 0 ? `<span style="color:var(--green)">+${v}%</span>` : `<span style="color:var(--red)">${v}%</span>`) : '—';
