@@ -28,7 +28,7 @@ from investment_agent import (
 )
 from backtest import run_backtest
 from quant_scanner import run_scan, UNIVERSE
-from earnings_tracker import get_earnings_data, LINKAGE_MAP
+from earnings_tracker import get_earnings_data, LINKAGE_MAP, TRACKED_STOCKS
 
 load_dotenv()
 
@@ -289,7 +289,7 @@ def backtest_run():
 
 @app.route("/earnings")
 def earnings_page():
-    return render_template("earnings.html", ticker_count=len(LINKAGE_MAP))
+    return render_template("earnings.html", ticker_count=len(TRACKED_STOCKS))
 
 
 @app.route("/api/earnings/data", methods=["POST"])
