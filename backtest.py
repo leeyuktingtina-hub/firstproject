@@ -190,11 +190,26 @@ def run_backtest(
         if ticker in signals:
             final_value += pos["shares"] * float(signals[ticker]["close"].iloc[-1])
 
-    # Benchmark: SPY buy-and-hold
+    # Benchmark: SPY and QQQ buy-and-hold
     spy = yf.Ticker("SPY").history(start=start_date, end=end_date, auto_adjust=True)
-    spy_return = float((spy["Close"].iloc[-1] / spy["Close"].iloc[0] - 1) * 100) if not spy.empty else None
+    qqq = yf.Ticker("QQQ").history(start=start_date, end=end_date, auto_adjust=True)
 
-    metrics = _calc_metrics(history, initial_cash, final_value, trades, spy_return)
+    spy_return = float((spy["Close"].iloc[-1] / spy["Close"].iloc[0] - 1) * 100) if not spy.empty else None
+    qqq_return = float((qqq["Close"].iloc[-1] / qqq["Close"].iloc[0] - 1) * 100) if not qqq.empty else None
+
+    # Build benchmark history scaled to initial_cash (every 3rd day to match strategy thinning)
+    def _bench_history(hist, name):
+        if hist.empty:
+            return []
+        base = float(hist["Close"].iloc[0])
+        rows = [{"date": str(d.date()), "value": round(initial_cash * float(p) / base, 2)}
+                for d, p in zip(hist.index, hist["Close"])]
+        return rows[::3]
+
+    spy_history = _bench_history(spy, "SPY")
+    qqq_history = _bench_history(qqq, "QQQ")
+
+    metrics = _calc_metrics(history, initial_cash, final_value, trades, spy_return, qqq_return)
 
     # Per-ticker summary
     ticker_summary = {}
@@ -211,15 +226,18 @@ def run_backtest(
         }
 
     return {
-        "metrics":          metrics,
-        "portfolio_history": history[::3],   # thin to every 3rd day
-        "trades":           trades[-100:],
-        "ticker_summary":   ticker_summary,
-        "spy_return":       round(spy_return, 2) if spy_return is not None else None,
+        "metrics":           metrics,
+        "portfolio_history": history[::3],
+        "spy_history":       spy_history,
+        "qqq_history":       qqq_history,
+        "trades":            trades[-100:],
+        "ticker_summary":    ticker_summary,
+        "spy_return":        round(spy_return, 2) if spy_return is not None else None,
+        "qqq_return":        round(qqq_return, 2) if qqq_return is not None else None,
     }
 
 
-def _calc_metrics(history, initial_cash, final_value, trades, spy_return) -> dict:
+def _calc_metrics(history, initial_cash, final_value, trades, spy_return, qqq_return=None) -> dict:
     total_return = (final_value / initial_cash - 1) * 100
     vals         = np.array([h["value"] for h in history])
 
@@ -257,5 +275,9 @@ def _calc_metrics(history, initial_cash, final_value, trades, spy_return) -> dic
         "avg_loss":      round(avg_loss, 2),
         "total_trades":  len(sell_trades),
         "final_value":   round(final_value, 2),
+        "alpha_spy":     round(total_return - spy_return, 2) if spy_return is not None else None,
+        "alpha_qqq":     round(total_return - qqq_return, 2) if qqq_return is not None else None,
+        "spy_return":    round(spy_return, 2) if spy_return is not None else None,
+        "qqq_return":    round(qqq_return, 2) if qqq_return is not None else None,
         "alpha":         round(total_return - spy_return, 2) if spy_return is not None else None,
     }

@@ -196,8 +196,28 @@
 
     <!-- Equity curve -->
     <div class="chart-card">
-      <div class="chart-title">📊 Portfolio Value vs S&P 500 (Benchmark)</div>
+      <div class="chart-title">📊 策略净值 vs 大盘指数（同等资金买入持有）</div>
       <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+    </div>
+
+    <!-- Benchmark comparison table -->
+    <div class="card" id="bench-card" style="display:none">
+      <div class="card-title">📈 与大盘指数对比</div>
+      <div style="overflow-x:auto">
+        <table class="trade-table">
+          <thead>
+            <tr>
+              <th>指标</th>
+              <th>本策略</th>
+              <th>SPY (S&P 500)</th>
+              <th>QQQ (纳斯达克100)</th>
+              <th>vs SPY 超额收益</th>
+              <th>vs QQQ 超额收益</th>
+            </tr>
+          </thead>
+          <tbody id="bench-tbody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Ticker summary -->
@@ -280,7 +300,7 @@
     const metrics = [
       { label: 'Total Return',   value: fmt(m.total_return, '%'),  cls: color(m.total_return),  sub: '' },
       { label: 'Ann. Return',    value: fmt(m.cagr, '%'),          cls: color(m.cagr),           sub: 'CAGR' },
-      { label: 'vs S&P 500',     value: m.alpha != null ? fmt(m.alpha, '%') : '—', cls: color(m.alpha), sub: 'Alpha' },
+      { label: 'vs S&P 500',     value: m.alpha_spy != null ? fmt(m.alpha_spy, '%') : (m.alpha != null ? fmt(m.alpha, '%') : '—'), cls: color(m.alpha_spy ?? m.alpha), sub: 'Alpha vs SPY' },
       { label: 'Sharpe Ratio',   value: m.sharpe_ratio?.toFixed(2) ?? '—', cls: m.sharpe_ratio > 1 ? 'pos' : m.sharpe_ratio < 0 ? 'neg' : 'neu', sub: '>1 = good' },
       { label: 'Max Drawdown',   value: fmt(m.max_drawdown, '%'),  cls: 'neg',                   sub: 'worst dip' },
       { label: 'Win Rate',       value: fmt(m.win_rate, '%'),      cls: m.win_rate > 50 ? 'pos' : 'neg', sub: `${m.total_trades} trades` },
@@ -298,13 +318,18 @@
       </div>
     `).join('');
 
-    // ── Equity curve ──
-    const history = data.portfolio_history || [];
-    const labels  = history.map(h => h.date);
-    const values  = history.map(h => h.value);
+    // ── Equity curve with benchmarks ──
+    const history    = data.portfolio_history || [];
+    const spyHistory = data.spy_history || [];
+    const qqqHistory = data.qqq_history || [];
+    const labels     = history.map(h => h.date);
+    const values     = history.map(h => h.value);
 
-    // Scale SPY to same initial cash
-    const initial = values[0] || 1;
+    // Align benchmark to strategy dates
+    const spyMap = Object.fromEntries(spyHistory.map(h => [h.date, h.value]));
+    const qqqMap = Object.fromEntries(qqqHistory.map(h => [h.date, h.value]));
+    const spyVals = labels.map(d => spyMap[d] ?? null);
+    const qqqVals = labels.map(d => qqqMap[d] ?? null);
 
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(document.getElementById('equity-chart'), {
@@ -313,13 +338,36 @@
         labels,
         datasets: [
           {
-            label: 'Strategy',
+            label: '本策略',
             data: values,
             borderColor: '#3fb950',
-            backgroundColor: 'rgba(63,185,80,0.08)',
-            borderWidth: 2,
+            backgroundColor: 'rgba(63,185,80,0.06)',
+            borderWidth: 2.5,
             pointRadius: 0,
             fill: true,
+            order: 1,
+          },
+          {
+            label: 'SPY (S&P 500)',
+            data: spyVals,
+            borderColor: '#58a6ff',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [5, 3],
+            pointRadius: 0,
+            fill: false,
+            order: 2,
+          },
+          {
+            label: 'QQQ (纳斯达克100)',
+            data: qqqVals,
+            borderColor: '#e3b341',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false,
+            order: 3,
           },
         ],
       },
@@ -334,7 +382,7 @@
             borderWidth: 1,
             titleColor: '#e6edf3',
             bodyColor: '#8b949e',
-            callbacks: { label: ctx => ` $${ctx.parsed.y.toLocaleString()}` },
+            callbacks: { label: ctx => ` $${ctx.parsed.y != null ? ctx.parsed.y.toLocaleString() : '—'}` },
           },
         },
         scales: {
@@ -343,6 +391,50 @@
         },
       },
     });
+
+    // ── Benchmark comparison table ──
+    const m       = data.metrics || {};
+    const spyRet  = data.spy_return;
+    const qqqRet  = data.qqq_return;
+    const stratRet = m.total_return;
+
+    const pct = v => v != null ? (v > 0 ? `<span style="color:var(--green)">+${v}%</span>` : `<span style="color:var(--red)">${v}%</span>`) : '—';
+    const alpha = (a, b) => {
+      if (a == null || b == null) return '—';
+      const diff = +(a - b).toFixed(2);
+      return diff > 0
+        ? `<span style="color:var(--green);font-weight:700">+${diff}% ✓ 跑赢</span>`
+        : `<span style="color:var(--red);font-weight:700">${diff}% ✗ 跑输</span>`;
+    };
+
+    document.getElementById('bench-card').style.display = 'block';
+    document.getElementById('bench-tbody').innerHTML = `
+      <tr>
+        <td style="font-weight:600">总收益率</td>
+        <td>${pct(stratRet)}</td>
+        <td>${pct(spyRet)}</td>
+        <td>${pct(qqqRet)}</td>
+        <td>${alpha(stratRet, spyRet)}</td>
+        <td>${alpha(stratRet, qqqRet)}</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">年化收益 (CAGR)</td>
+        <td>${pct(m.cagr)}</td>
+        <td colspan="2" style="color:var(--muted);font-size:12px">（指数CAGR需单独计算）</td>
+        <td>—</td><td>—</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">最大回撤</td>
+        <td style="color:var(--red)">${m.max_drawdown != null ? m.max_drawdown + '%' : '—'}</td>
+        <td colspan="2" style="color:var(--muted);font-size:12px">指数回撤未计算</td>
+        <td>—</td><td>—</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">Sharpe Ratio</td>
+        <td>${m.sharpe_ratio ?? '—'}</td>
+        <td colspan="4" style="color:var(--muted);font-size:12px">SPY历史Sharpe约0.5-0.7，>1为优秀</td>
+      </tr>
+    `;
 
     // ── Ticker summary ──
     const tgrid = document.getElementById('ticker-grid');
