@@ -480,6 +480,34 @@ Always call get_market_overview first when starting a session, then use the othe
 
 
 # ---------------------------------------------------------------------------
+# Strategy knowledge base — loaded from strategy_knowledge.md if present.
+# Encodes the user's "AI 产业链瓶颈轮动" framework, decision trees, watchlists,
+# risk discipline and behavioural rules. Appended to the system prompt so the
+# agent applies these rules in every conversation.
+# ---------------------------------------------------------------------------
+
+def _load_strategy_knowledge() -> str:
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "strategy_knowledge.md")
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+_STRATEGY_KB = _load_strategy_knowledge()
+
+if _STRATEGY_KB:
+    SYSTEM_PROMPT += (
+        "\n\n---\n\n"
+        "**STRATEGY KNOWLEDGE BASE — 你的核心投资框架（必须遵守）:**\n"
+        "以下是用户的投资策略知识库。框架和规则（第1-3、5-6节）是你的决策准则；"
+        "标的清单（第4节）和市场快照（第7节）中的价格数据会过时，引用前必须用工具重新拉取实时数据。"
+        "给出任何建议时，应用其中的决策树、风控纪律和行为纠偏规则。\n\n"
+        + _STRATEGY_KB
+    )
+
+
+# ---------------------------------------------------------------------------
 # Agent loop
 # ---------------------------------------------------------------------------
 
