@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/winrate.yml"
       - "evaluate_signals.py"
+      - "evaluate_strategies.py"
 
 jobs:
   replay:
@@ -19,3 +20,5 @@ jobs:
         run: pip install -q yfinance numpy pandas
       - name: Run historical replay
         run: python evaluate_signals.py
+      - name: Run per-market strategy selection (train/test split)
+        run: python evaluate_strategies.py
