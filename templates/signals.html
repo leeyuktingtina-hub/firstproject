@@ -115,6 +115,10 @@
       <div class="status-val" id="st-tg">—</div>
       <div class="status-lbl">推送通知</div>
     </div>
+    <div class="status-card">
+      <div class="status-val" id="st-winrate">—</div>
+      <div class="status-lbl">买入信号胜率</div>
+    </div>
   </div>
 
   <div style="text-align:center;margin:-8px 0 24px;">
@@ -148,7 +152,7 @@
   </div>
 
   <!-- Signal feed -->
-  <div class="feed-title">📋 信号记录（每 <span id="interval">30</span> 分钟自动扫描 75 只股票）</div>
+  <div class="feed-title">📋 信号记录（每 <span id="interval">30</span> 分钟自动扫描 75 只股票 · 开收盘自动推送摘要）</div>
   <div id="feed"></div>
   <div id="empty-feed" style="display:none">
     还没有信号记录。<br>
@@ -157,7 +161,7 @@
     信号会出现在这里（并推送到Telegram，如已配置）。
   </div>
 
-  <div class="refresh-note">页面每60秒自动刷新 · 信号检测规则：买入/卖出区切换 · RSI&lt;30超卖 · RSI&gt;75超买</div>
+  <div class="refresh-note">页面每60秒自动刷新 · 信号：买卖区切换 · RSI&lt;30超卖 · RSI&gt;75超买 · 价格为昨日收盘（EOD）· 每个市场开盘/收盘自动推送摘要</div>
 </div>
 
 <script>
@@ -176,6 +180,14 @@
         ? `<span class="on">✓ ${active.join(' ')}</span>` : '<span class="off">✗ 未配置</span>';
       document.getElementById('interval').textContent = data.interval_min;
       document.getElementById('tg-setup').style.display = data.push_on ? 'none' : 'block';
+      const wr = document.getElementById('st-winrate');
+      if (data.win_rate !== null && data.win_rate !== undefined) {
+        const color = data.win_rate >= 55 ? 'var(--green)' : (data.win_rate >= 45 ? 'var(--yellow)' : 'var(--red)');
+        wr.innerHTML = `<span style="color:${color}">${data.win_rate}%</span>`;
+        wr.parentElement.querySelector('.status-lbl').textContent = `买入胜率(${data.signals_tracked}次)`;
+      } else {
+        wr.textContent = '累积中…';
+      }
 
       const feed = document.getElementById('feed');
       const empty = document.getElementById('empty-feed');
