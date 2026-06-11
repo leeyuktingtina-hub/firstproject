@@ -298,6 +298,22 @@ def signals_api():
     return jsonify(get_signal_feed())
 
 
+# Historical win-rate replay — cached for 24h since it downloads 75 tickers
+_winrate_cache: dict = {"result": None, "at": None}
+
+@app.route("/api/winrate/run", methods=["POST"])
+def winrate_run():
+    import time as _time
+    from evaluate_signals import run_evaluation
+    now = _time.time()
+    if _winrate_cache["result"] and now - _winrate_cache["at"] < 86400:
+        return jsonify({**_winrate_cache["result"], "cached": True})
+    result = run_evaluation()
+    if "error" not in result:
+        _winrate_cache.update(result=result, at=now)
+    return jsonify(result)
+
+
 @app.route("/api/signals/test-push", methods=["POST"])
 def signals_test_push():
     """Send a test notification to every configured push channel."""

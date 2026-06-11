@@ -151,6 +151,21 @@
     <p style="color:var(--muted);margin-top:12px;font-size:12px;">方式三：Telegram（<code>TELEGRAM_BOT_TOKEN</code> + <code>TELEGRAM_CHAT_ID</code>）。配置任一方式后 Railway 会自动重新部署。</p>
   </div>
 
+  <!-- Historical win-rate replay -->
+  <div class="tg-card" style="border-color:var(--yellow);" id="winrate-card">
+    <h3 style="color:var(--yellow)">🧪 历史胜率回测（2021年至今 · 真实历史数据回放）</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:10px;">
+      用过去几年的真实行情，逐日重算扫描器的买入信号，统计信号发出后 7天/30天 的实际收益。
+      胜=涨幅≥+3%，负=跌幅≤-5%。首次运行约需1-2分钟（下载75只股票历史数据）。
+    </p>
+    <button id="wr-btn" onclick="runWinrate()" style="
+      background:#3a2f1f; color:var(--yellow); border:1px solid var(--yellow);
+      padding:8px 18px; border-radius:8px; font-size:13px; cursor:pointer;">
+      ▶ 运行历史回测
+    </button>
+    <div id="wr-result" style="margin-top:14px;"></div>
+  </div>
+
   <!-- Signal feed -->
   <div class="feed-title">📋 信号记录（每 <span id="interval">30</span> 分钟自动扫描 75 只股票 · 开收盘自动推送摘要）</div>
   <div id="feed"></div>
@@ -208,6 +223,51 @@
         </div>
       `).join('');
     } catch(e) { /* silent */ }
+  }
+
+  async function runWinrate() {
+    const btn = document.getElementById('wr-btn');
+    const out = document.getElementById('wr-result');
+    btn.disabled = true;
+    out.innerHTML = '<span style="color:var(--muted)">⏳ 回放中…首次约1-2分钟，请勿关闭页面</span>';
+    try {
+      const res  = await fetch('/api/winrate/run', { method: 'POST' });
+      const d    = await res.json();
+      if (d.error) { out.innerHTML = `<span style="color:var(--red)">✗ ${d.error}</span>`; btn.disabled = false; return; }
+
+      const row = (label, s) => s ? `
+        <tr>
+          <td style="padding:5px 10px;color:var(--text)">${label}</td>
+          <td style="padding:5px 10px;text-align:center;font-weight:700;color:${s.win_rate>=50?'var(--green)':(s.win_rate>=40?'var(--yellow)':'var(--red)')}">${s.win_rate}%</td>
+          <td style="padding:5px 10px;text-align:center;color:var(--red)">${s.loss_rate}%</td>
+          <td style="padding:5px 10px;text-align:center">${s.positive}%</td>
+          <td style="padding:5px 10px;text-align:center;color:${s.avg_ret>0?'var(--green)':'var(--red)'}">${s.avg_ret>0?'+':''}${s.avg_ret}%</td>
+          <td style="padding:5px 10px;text-align:center;color:var(--muted)">${s.signals}</td>
+        </tr>` : '';
+
+      let html = `
+        <table style="width:100%;border-collapse:collapse;font-size:12px;background:#0d1117;border-radius:8px;overflow:hidden;">
+          <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+            <th style="padding:6px 10px;text-align:left">持有期</th>
+            <th style="padding:6px 10px">胜率≥+3%</th><th style="padding:6px 10px">亏损≤-5%</th>
+            <th style="padding:6px 10px">正收益</th><th style="padding:6px 10px">平均</th><th style="padding:6px 10px">信号数</th>
+          </tr>
+          ${row('7天', d.hold_7d)}
+          ${row('30天', d.hold_30d)}
+          ${row('高分信号 score>70 (30天)', d.high_score)}
+        </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">分市场(30天)：${
+          Object.entries(d.by_market||{}).map(([m,s])=>`${m} 胜率${s.win_rate}%(${s.signals}次)`).join(' · ')
+        }</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">分年份(30天)：${
+          Object.entries(d.by_year||{}).map(([y,s])=>`${y}年 ${s.win_rate}%`).join(' · ')
+        }</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${d.win_def} · 覆盖${d.downloaded}/${d.universe}只 · 自${d.eval_from}起${d.cached?' · (24h缓存)':''}</div>`;
+      out.innerHTML = html;
+    } catch(e) {
+      out.innerHTML = '<span style="color:var(--red)">✗ 请求失败，可能是数据下载超时，请重试</span>';
+    }
+    btn.disabled = false;
   }
 
   async function testPush() {
