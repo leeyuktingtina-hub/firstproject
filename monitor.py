@@ -181,11 +181,17 @@ def _detect_signals(current: list[dict], previous: dict) -> list[dict]:
 
         # 1. Signal flip into BUY
         if sig == "BUY" and psig in ("HOLD", "SELL"):
+            strat = stock.get("strategy", "momentum")
+            if strat == "mean_reversion":
+                title  = f"{tk} RSI超卖反弹机会"
+                detail = f"RSI {rsi}（<30超卖）· 昨收 {stock['price']} · 港/中策略：超卖反弹"
+            else:
+                title  = f"{tk} 进入买入区"
+                detail = f"综合评分 {stock['score']}/100 · RSI {rsi} · 昨收 {stock['price']} · 美股策略：动量"
             events.append({
                 "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
                 "type": "BUY_SIGNAL", "emoji": "🟢",
-                "title": f"{tk} 进入买入区",
-                "detail": f"综合评分 {stock['score']}/100 · RSI {rsi} · 昨收 {stock['price']}",
+                "title": title, "detail": detail, "strategy": strat,
                 "price": stock["price"], "score": stock["score"], "rsi": rsi,
             })
 
@@ -199,8 +205,8 @@ def _detect_signals(current: list[dict], previous: dict) -> list[dict]:
                 "price": stock["price"], "score": stock["score"], "rsi": rsi,
             })
 
-        # 3. RSI oversold crossing (only on crossing, not while staying)
-        if rsi < 30 and (prsi is None or prsi >= 30):
+        # 3. RSI oversold crossing — US only; for HK/CN this IS the BUY signal
+        if stock.get("strategy", "momentum") == "momentum" and rsi < 30 and (prsi is None or prsi >= 30):
             events.append({
                 "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
                 "type": "OVERSOLD", "emoji": "💎",
@@ -222,28 +228,29 @@ def _detect_signals(current: list[dict], previous: dict) -> list[dict]:
     return events
 
 
-def _position_size(score: int) -> str:
-    if score >= 80: return "12-15%（高信心）"
-    if score >= 65: return "8-12%（中等信心）"
-    return "5-8%（谨慎试仓）"
-
-
 def _format_signal_push(events: list[dict]) -> tuple[str, str]:
-    """Return (plain, html) push text with actionable guidance."""
+    """Return (plain, html) push text with actionable guidance.
+
+    Position sizes are fixed per strategy (historical replay showed score
+    level above the threshold adds no extra edge, so no score-based sizing).
+    """
     plain_lines = [f"📡 量化监控 · {len(events)} 条新信号\n"]
     html_lines  = [f"📡 <b>量化监控</b> · {len(events)} 条新信号\n"]
 
     for e in events[:10]:
         price = e.get("price", 0)
-        score = e.get("score", 0)
         t     = e["type"]
 
         if t == "BUY_SIGNAL":
             stop = round(price * 0.92, 2)
-            tp   = round(price * 1.25, 2)
-            pos  = _position_size(score)
-            guidance_p = f"  💡建仓 {pos}  止损 {stop}(-8%)  止盈 {tp}(+25%)"
-            guidance_h = f"  💡建仓 {pos} | 🛑{stop}(-8%) | 🎯{tp}(+25%)"
+            if e.get("strategy") == "mean_reversion":
+                tp = round(price * 1.10, 2)
+                guidance_p = f"  💡超卖反弹：试探仓5-8%  止损 {stop}(-8%)  反弹至RSI>55或 {tp}(+10%) 止盈"
+                guidance_h = f"  💡超卖反弹：试探仓5-8% | 🛑{stop}(-8%) | 🎯RSI>55或{tp}(+10%)止盈"
+            else:
+                tp = round(price * 1.25, 2)
+                guidance_p = f"  💡动量买入：建仓8-12%  止损 {stop}(-8%)  止盈 {tp}(+25%)"
+                guidance_h = f"  💡动量买入：建仓8-12% | 🛑{stop}(-8%) | 🎯{tp}(+25%)"
         elif t == "SELL_SIGNAL":
             guidance_p = guidance_h = "  💡评分偏低，减仓/止盈，清至5%以下或清空"
         elif t == "OVERSOLD":
@@ -333,13 +340,16 @@ def _send_market_summary(job: dict, current: list[dict], state: dict, now: datet
     html_lines  = [header_h, stats, ""]
 
     if buys:
-        plain_lines.append("🎯 买入区（按评分）")
-        html_lines.append("🎯 <b>买入区（按评分）</b>")
+        plain_lines.append("🎯 买入区")
+        html_lines.append("🎯 <b>买入区</b>")
         for s in buys[:5]:
             stop = round(s["price"] * 0.92, 2)
-            pos  = _position_size(s["score"])
-            line_p = f"  {s['ticker']} 评分{s['score']} RSI{s['rsi']} 昨收{s['price']} | 建仓{pos} 止损{stop}"
-            line_h = f"  <b>{s['ticker']}</b> 评分{s['score']} RSI{s['rsi']} 昨收{s['price']} | 建仓{pos} 🛑{stop}"
+            if s.get("strategy") == "mean_reversion":
+                pos, tag = "5-8%试探", "超卖反弹"
+            else:
+                pos, tag = "8-12%", "动量"
+            line_p = f"  {s['ticker']} [{tag}] 评分{s['score']} RSI{s['rsi']} 昨收{s['price']} | 建仓{pos} 止损{stop}"
+            line_h = f"  <b>{s['ticker']}</b> [{tag}] 评分{s['score']} RSI{s['rsi']} 昨收{s['price']} | 建仓{pos} 🛑{stop}"
             plain_lines.append(line_p); html_lines.append(line_h)
         plain_lines.append(""); html_lines.append("")
 
