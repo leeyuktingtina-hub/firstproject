@@ -179,51 +179,49 @@ def _detect_signals(current: list[dict], previous: dict) -> list[dict]:
         prsi  = prev.get("rsi")
         ret1m = stock.get("ret_1m", 0)
 
+        strat  = stock.get("strategy", "momentum")
+        as_of  = stock.get("as_of", "")
+        price  = stock["price"]
+        common = {
+            "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
+            "strategy": strat, "as_of": as_of,
+            "price": price, "score": stock["score"], "rsi": rsi,
+        }
+
+        # NOTE: every rule below requires a previous snapshot (psig/prsi not None).
+        # The first scan after a restart only establishes the baseline silently —
+        # otherwise every redeploy re-fires all currently-active signals.
+
         # 1. Signal flip into BUY
         if sig == "BUY" and psig in ("HOLD", "SELL"):
-            strat = stock.get("strategy", "momentum")
             if strat == "mean_reversion":
-                title  = f"{tk} RSI超卖反弹机会"
-                detail = f"RSI {rsi}（<30超卖）· 昨收 {stock['price']} · 港/中策略：超卖反弹"
+                title  = f"{tk} 超卖反弹买点"
+                detail = f"触发原因：RSI从{prsi}跌破30至{rsi}（超卖）· 昨收价 {price}"
             else:
                 title  = f"{tk} 进入买入区"
-                detail = f"综合评分 {stock['score']}/100 · RSI {rsi} · 昨收 {stock['price']} · 美股策略：动量"
-            events.append({
-                "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
-                "type": "BUY_SIGNAL", "emoji": "🟢",
-                "title": title, "detail": detail, "strategy": strat,
-                "price": stock["price"], "score": stock["score"], "rsi": rsi,
-            })
+                detail = f"触发原因：综合评分升至{stock['score']}（突破62动量买入线）· RSI {rsi} · 昨收价 {price}"
+            events.append({**common, "type": "BUY_SIGNAL", "emoji": "🟢", "title": title, "detail": detail})
 
         # 2. Signal flip into SELL
         elif sig == "SELL" and psig in ("HOLD", "BUY"):
-            events.append({
-                "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
-                "type": "SELL_SIGNAL", "emoji": "🔴",
-                "title": f"{tk} 进入卖出/回避区",
-                "detail": f"综合评分 {stock['score']}/100 · RSI {rsi} · 昨收 {stock['price']}",
-                "price": stock["price"], "score": stock["score"], "rsi": rsi,
-            })
+            if strat == "mean_reversion":
+                detail = f"触发原因：RSI升至{rsi}（突破70超买）· 昨收价 {price}"
+            else:
+                detail = f"触发原因：综合评分跌至{stock['score']}（跌破38卖出线）· RSI {rsi} · 昨收价 {price}"
+            events.append({**common, "type": "SELL_SIGNAL", "emoji": "🔴",
+                           "title": f"{tk} 进入卖出/回避区", "detail": detail})
 
         # 3. RSI oversold crossing — US only; for HK/CN this IS the BUY signal
-        if stock.get("strategy", "momentum") == "momentum" and rsi < 30 and (prsi is None or prsi >= 30):
-            events.append({
-                "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
-                "type": "OVERSOLD", "emoji": "💎",
-                "title": f"{tk} RSI超卖 ({rsi})",
-                "detail": f"可能是分批埋伏机会 · 昨收 {stock['price']} · 1月{'+' if ret1m>0 else ''}{ret1m}%",
-                "price": stock["price"], "score": stock["score"], "rsi": rsi,
-            })
+        if strat == "momentum" and prsi is not None and rsi < 30 and prsi >= 30:
+            events.append({**common, "type": "OVERSOLD", "emoji": "💎",
+                           "title": f"{tk} RSI超卖 ({rsi})",
+                           "detail": f"触发原因：RSI从{prsi}跌破30 · 昨收价 {price} · 近1月{'+' if ret1m>0 else ''}{ret1m}% · 关注分批埋伏机会"})
 
         # 4. RSI overbought crossing
-        if rsi > 75 and (prsi is None or prsi <= 75):
-            events.append({
-                "time": now_str, "ticker": tk, "name": stock["name"], "market": stock["market"],
-                "type": "OVERBOUGHT", "emoji": "⚠️",
-                "title": f"{tk} RSI超买 ({rsi})",
-                "detail": f"考虑止盈1/3锁定利润，不要追高 · 昨收 {stock['price']}",
-                "price": stock["price"], "score": stock["score"], "rsi": rsi,
-            })
+        if prsi is not None and rsi > 75 and prsi <= 75:
+            events.append({**common, "type": "OVERBOUGHT", "emoji": "⚠️",
+                           "title": f"{tk} RSI超买 ({rsi})",
+                           "detail": f"触发原因：RSI从{prsi}升破75 · 昨收价 {price} · 持有者考虑止盈1/3，勿追高"})
 
     return events
 
@@ -245,20 +243,20 @@ def _format_signal_push(events: list[dict]) -> tuple[str, str]:
             stop = round(price * 0.92, 2)
             if e.get("strategy") == "mean_reversion":
                 tp = round(price * 1.10, 2)
-                guidance_p = f"  💡超卖反弹：试探仓5-8%  止损 {stop}(-8%)  反弹至RSI>55或 {tp}(+10%) 止盈"
-                guidance_h = f"  💡超卖反弹：试探仓5-8% | 🛑{stop}(-8%) | 🎯RSI>55或{tp}(+10%)止盈"
+                guidance_p = f"  💡操作：{price}附近试探仓5-8% · 止损{stop}(-8%) · 止盈{tp}(+10%)或RSI回到55"
+                guidance_h = f"  💡{price}附近试探仓5-8% | 🛑{stop}(-8%) | 🎯{tp}(+10%)或RSI>55"
             else:
                 tp = round(price * 1.25, 2)
-                guidance_p = f"  💡动量买入：建仓8-12%  止损 {stop}(-8%)  止盈 {tp}(+25%)"
-                guidance_h = f"  💡动量买入：建仓8-12% | 🛑{stop}(-8%) | 🎯{tp}(+25%)"
+                guidance_p = f"  💡操作：{price}附近建仓8-12% · 止损{stop}(-8%) · 止盈{tp}(+25%)"
+                guidance_h = f"  💡{price}附近建仓8-12% | 🛑{stop}(-8%) | 🎯{tp}(+25%)"
         elif t == "SELL_SIGNAL":
-            guidance_p = guidance_h = "  💡评分偏低，减仓/止盈，清至5%以下或清空"
+            guidance_p = guidance_h = f"  💡操作：持有者{price}附近减仓至5%以下或清仓"
         elif t == "OVERSOLD":
             stop = round(price * 0.92, 2)
-            guidance_p = f"  💡RSI超卖，可小仓5-8%试探，止损 {stop}，等RSI>35确认"
-            guidance_h = f"  💡RSI超卖，可小仓5-8%试探 | 🛑{stop} | 等RSI>35确认"
+            guidance_p = f"  💡操作：{price}附近可小仓5-8%试探 · 止损{stop} · 等RSI回升>35再加仓"
+            guidance_h = f"  💡{price}附近小仓5-8%试探 | 🛑{stop} | 等RSI>35再加仓"
         elif t == "OVERBOUGHT":
-            guidance_p = guidance_h = "  💡RSI超买，止盈1/3锁利，不追高"
+            guidance_p = guidance_h = f"  💡操作：持有者{price}附近止盈1/3锁利 · 未持有勿追高"
         else:
             guidance_p = guidance_h = ""
 
@@ -269,8 +267,10 @@ def _format_signal_push(events: list[dict]) -> tuple[str, str]:
         note = f"…另 {len(events)-10} 条信号，详见 /signals"
         plain_lines.append(note); html_lines.append(note)
 
-    plain_lines.append("⚠️ 价格为昨日收盘，信号基于EOD数据（非实时）")
-    html_lines.append("⚠️ 价格为昨日收盘，信号基于EOD数据（非实时）")
+    as_of = next((e.get("as_of") for e in events if e.get("as_of")), "")
+    data_note = f"📅 数据基准：{as_of} 日线收盘价（非实时，每个交易日收盘后更新）"
+    plain_lines.append(data_note)
+    html_lines.append(data_note)
     return "\n".join(plain_lines), "\n".join(html_lines)
 
 
@@ -281,7 +281,8 @@ def _notify(events: list[dict]):
     plain, html = _format_signal_push(events)
     subject = f"📡 {events[0]['title']}" + (f" 等{len(events)}条" if len(events) > 1 else "")
     send_email(subject, plain)
-    send_bark(f"📡 {len(events)}条新信号", "\n".join(f"{e['emoji']} {e['title']}" for e in events[:6]))
+    # Bark gets the full plain text too — title-only pushes were unreadable
+    send_bark(f"📡 {len(events)}条新信号", plain)
     send_telegram(html)
 
 

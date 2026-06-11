@@ -204,6 +204,7 @@ def score_ticker(ticker: str, market: str) -> dict | None:
             "score":    round(composite * 100, 1),
             "signal":   signal,
             "strategy": strategy,
+            "as_of":    hist.index[-1].strftime("%Y-%m-%d"),
         }
     except Exception:
         return None
