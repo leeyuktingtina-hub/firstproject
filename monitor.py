@@ -83,6 +83,9 @@ def get_signal_feed() -> dict:
         "monitor_running": _monitor_started,
         "win_rate":        win_rate,
         "signals_tracked": len(resolved),
+        "last_scan_at":    state.get("last_scan_at"),
+        "last_scan_count": state.get("last_scan_count"),
+        "last_error":      state.get("last_error"),
     }
 
 
@@ -307,10 +310,12 @@ def _should_send_summary(job: dict, state: dict, now: datetime) -> bool:
                 return False
         except Exception:
             pass
+    # Fire from the scheduled time up to 90 min late — a fixed ±window missed
+    # the slot whenever a scan/restart didn't land inside it
     now_m = now.hour * 60 + now.minute
     tgt_m = job["hh"] * 60 + job["mm"]
-    diff  = abs(now_m - tgt_m)
-    return min(diff, 1440 - diff) <= _SUMMARY_WINDOW_MIN
+    late  = (now_m - tgt_m) % 1440
+    return late <= 90
 
 
 def _send_market_summary(job: dict, current: list[dict], state: dict, now: datetime):
@@ -402,8 +407,16 @@ def _scan_once():
 
     result  = run_scan()
     current = result.get("all", [])
+
+    # Always record scan health so /signals can show why we're silent
+    now = datetime.now(HKT)
+    state["last_scan_at"]    = now.strftime("%Y-%m-%d %H:%M HKT")
+    state["last_scan_count"] = len(current)
     if not current:
+        state["last_error"] = "扫描返回0只股票（可能被Yahoo限流），跳过本轮"
+        _save_json(STATE_FILE, state)
         return
+    state["last_error"] = None
 
     events = _detect_signals(current, previous)
 

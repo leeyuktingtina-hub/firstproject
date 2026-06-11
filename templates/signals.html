@@ -187,7 +187,13 @@
 
       document.getElementById('st-running').innerHTML = data.monitor_running
         ? '<span class="on">● 运行中</span>' : '<span class="off">● 已停止</span>';
-      document.getElementById('st-last').textContent = data.last_scan ? data.last_scan.slice(5, 16) : '等待首次扫描';
+      const lastTxt = data.last_scan_at
+        ? `${data.last_scan_at.slice(5, 16)} (${data.last_scan_count}只)`
+        : (data.last_scan ? data.last_scan.slice(5, 16) : '等待首次扫描');
+      document.getElementById('st-last').textContent = lastTxt;
+      if (data.last_error) {
+        document.getElementById('st-last').innerHTML += `<div style="font-size:10px;color:var(--red)">${data.last_error}</div>`;
+      }
       document.getElementById('st-next').textContent = data.next_scan ? data.next_scan.slice(5, 16) : '—';
       const ch = data.channels || {};
       const active = [ch.email && '📧邮件', ch.bark && '📱Bark', ch.telegram && 'TG'].filter(Boolean);
