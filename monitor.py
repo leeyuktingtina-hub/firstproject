@@ -63,18 +63,34 @@ def get_signal_feed() -> dict:
     """Public API for the web page."""
     state   = _load_json(STATE_FILE, {})
     signals = _load_json(SIGNALS_FILE, [])
+    channels = push_channels_status()
     return {
         "signals":        signals[:100],
         "last_scan":      state.get("last_scan"),
         "next_scan":      state.get("next_scan"),
         "scan_count":     state.get("scan_count", 0),
         "interval_min":   SCAN_INTERVAL_MIN,
-        "telegram_on":    bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")),
+        "channels":       channels,
+        "push_on":        any(channels.values()),
+        "telegram_on":    channels["telegram"],
         "monitor_running": _monitor_started,
     }
 
 
-# ── Telegram push ─────────────────────────────────────────────────────────────
+# ── Push channels ─────────────────────────────────────────────────────────────
+# Configure ANY of these (set env vars in Railway Variables):
+#
+# 1. Email (Gmail):
+#      SMTP_EMAIL    = your gmail address (sender)
+#      SMTP_PASSWORD = Gmail "App Password" (Google Account → Security →
+#                      2-Step Verification → App passwords)
+#      ALERT_EMAIL   = where to send alerts (can be same as SMTP_EMAIL)
+#
+# 2. Bark (iPhone app, simplest):
+#      BARK_KEY      = the key shown in the Bark app after install
+#
+# 3. Telegram:
+#      TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 
 def send_telegram(text: str) -> bool:
     token   = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -90,6 +106,52 @@ def send_telegram(text: str) -> bool:
         return resp.status_code == 200
     except Exception:
         return False
+
+
+def send_email(subject: str, body: str) -> bool:
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.header import Header
+
+    sender   = os.environ.get("SMTP_EMAIL", "")
+    password = os.environ.get("SMTP_PASSWORD", "")
+    to_addr  = os.environ.get("ALERT_EMAIL", sender)
+    if not sender or not password:
+        return False
+    try:
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = Header(subject, "utf-8")
+        msg["From"]    = sender
+        msg["To"]      = to_addr
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as server:
+            server.login(sender, password)
+            server.sendmail(sender, [to_addr], msg.as_string())
+        return True
+    except Exception:
+        return False
+
+
+def send_bark(title: str, body: str) -> bool:
+    key = os.environ.get("BARK_KEY", "")
+    if not key:
+        return False
+    try:
+        resp = requests.post(
+            f"https://api.day.app/{key}",
+            json={"title": title, "body": body, "group": "量化信号", "sound": "bell"},
+            timeout=10,
+        )
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
+def push_channels_status() -> dict:
+    return {
+        "email":    bool(os.environ.get("SMTP_EMAIL") and os.environ.get("SMTP_PASSWORD")),
+        "bark":     bool(os.environ.get("BARK_KEY")),
+        "telegram": bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")),
+    }
 
 
 # ── Signal detection ──────────────────────────────────────────────────────────
@@ -152,15 +214,29 @@ def _detect_signals(current: list[dict], previous: dict) -> list[dict]:
 
 
 def _notify(events: list[dict]):
-    """Push events to Telegram (batched into one message)."""
+    """Push events to all configured channels (batched into one message)."""
     if not events:
         return
-    lines = [f"📡 <b>量化监控信号</b> ({len(events)}条)\n"]
+
+    # Plain-text version (email / bark)
+    plain_lines = [f"量化监控信号 ({len(events)}条)\n"]
     for e in events[:15]:
-        lines.append(f"{e['emoji']} <b>{e['title']}</b>\n   {e['detail']}\n")
+        plain_lines.append(f"{e['emoji']} {e['title']}\n   {e['detail']}\n")
     if len(events) > 15:
-        lines.append(f"…及另外 {len(events)-15} 条信号，详见网站 /signals")
-    send_telegram("\n".join(lines))
+        plain_lines.append(f"…及另外 {len(events)-15} 条信号，详见网站 /signals")
+    plain = "\n".join(plain_lines)
+
+    # HTML version (telegram)
+    html_lines = [f"📡 <b>量化监控信号</b> ({len(events)}条)\n"]
+    for e in events[:15]:
+        html_lines.append(f"{e['emoji']} <b>{e['title']}</b>\n   {e['detail']}\n")
+    if len(events) > 15:
+        html_lines.append(f"…及另外 {len(events)-15} 条信号，详见网站 /signals")
+
+    subject = f"📡 量化信号: {events[0]['title']}" + (f" 等{len(events)}条" if len(events) > 1 else "")
+    send_email(subject, plain)
+    send_bark(f"📡 {len(events)}条新信号", "\n".join(f"{e['emoji']} {e['title']}" for e in events[:8]))
+    send_telegram("\n".join(html_lines))
 
 
 # ── Monitor loop ──────────────────────────────────────────────────────────────

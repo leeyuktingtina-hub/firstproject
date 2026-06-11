@@ -113,21 +113,29 @@
     </div>
     <div class="status-card">
       <div class="status-val" id="st-tg">—</div>
-      <div class="status-lbl">Telegram推送</div>
+      <div class="status-lbl">推送通知</div>
     </div>
   </div>
 
-  <!-- Telegram setup (shown when not configured) -->
+  <!-- Push setup (shown when not configured) -->
   <div class="tg-card" id="tg-setup" style="display:none">
-    <h3>📱 开启手机推送（Telegram，5分钟设置）</h3>
+    <h3>📱 开启推送通知（三选一即可）</h3>
+    <p style="color:var(--text);margin-bottom:12px;"><b>方式一：📧 邮件推送（无需装APP，推荐）</b></p>
     <ol>
-      <li>在 Telegram 搜索 <code>@BotFather</code> → 发送 <code>/newbot</code> → 取个名字 → 复制 <b>bot token</b></li>
-      <li>搜索 <code>@userinfobot</code> → 点 Start → 复制你的 <b>chat id</b>（一串数字）</li>
-      <li>在 Railway → Variables 添加两个变量：<br>
-          <code>TELEGRAM_BOT_TOKEN</code> = 你的token<br>
-          <code>TELEGRAM_CHAT_ID</code> = 你的chat id</li>
-      <li>找到你创建的 bot，点 <b>Start</b>，等 Railway 重新部署即可</li>
+      <li>打开 <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--cyan)">Google账户 → 应用专用密码</a>（需先开启两步验证）</li>
+      <li>创建一个应用密码（16位字符），复制下来</li>
+      <li>在 Railway → Variables 添加：<br>
+          <code>SMTP_EMAIL</code> = 你的Gmail地址<br>
+          <code>SMTP_PASSWORD</code> = 刚才的16位应用密码<br>
+          <code>ALERT_EMAIL</code> = 接收信号的邮箱（可同上）</li>
     </ol>
+    <p style="color:var(--text);margin:14px 0 12px;"><b>方式二：📱 Bark APP（iPhone最简单，2分钟）</b></p>
+    <ol>
+      <li>App Store 搜索 <code>Bark</code>（免费），安装打开</li>
+      <li>首页会显示一个URL，如 <code>https://api.day.app/AbCdEf123/</code>，复制其中的 key（<code>AbCdEf123</code> 部分）</li>
+      <li>在 Railway → Variables 添加：<code>BARK_KEY</code> = 你的key</li>
+    </ol>
+    <p style="color:var(--muted);margin-top:12px;font-size:12px;">方式三：Telegram（<code>TELEGRAM_BOT_TOKEN</code> + <code>TELEGRAM_CHAT_ID</code>）。配置任一方式后 Railway 会自动重新部署。</p>
   </div>
 
   <!-- Signal feed -->
@@ -153,10 +161,12 @@
         ? '<span class="on">● 运行中</span>' : '<span class="off">● 已停止</span>';
       document.getElementById('st-last').textContent = data.last_scan ? data.last_scan.slice(5, 16) : '等待首次扫描';
       document.getElementById('st-next').textContent = data.next_scan ? data.next_scan.slice(5, 16) : '—';
-      document.getElementById('st-tg').innerHTML = data.telegram_on
-        ? '<span class="on">✓ 已开启</span>' : '<span class="off">✗ 未配置</span>';
+      const ch = data.channels || {};
+      const active = [ch.email && '📧邮件', ch.bark && '📱Bark', ch.telegram && 'TG'].filter(Boolean);
+      document.getElementById('st-tg').innerHTML = active.length
+        ? `<span class="on">✓ ${active.join(' ')}</span>` : '<span class="off">✗ 未配置</span>';
       document.getElementById('interval').textContent = data.interval_min;
-      document.getElementById('tg-setup').style.display = data.telegram_on ? 'none' : 'block';
+      document.getElementById('tg-setup').style.display = data.push_on ? 'none' : 'block';
 
       const feed = document.getElementById('feed');
       const empty = document.getElementById('empty-feed');
