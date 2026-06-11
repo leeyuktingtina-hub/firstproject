@@ -29,6 +29,7 @@ from investment_agent import (
 from backtest import run_backtest
 from quant_scanner import run_scan, UNIVERSE
 from earnings_tracker import get_earnings_data, LINKAGE_MAP, TRACKED_STOCKS
+from monitor import start_monitor, get_signal_feed
 
 load_dotenv()
 
@@ -287,6 +288,16 @@ def backtest_run():
     return jsonify(result)
 
 
+@app.route("/signals")
+def signals_page():
+    return render_template("signals.html")
+
+
+@app.route("/api/signals")
+def signals_api():
+    return jsonify(get_signal_feed())
+
+
 @app.route("/earnings")
 def earnings_page():
     return render_template("earnings.html", ticker_count=len(TRACKED_STOCKS))
@@ -312,9 +323,15 @@ def scanner_run():
     return jsonify(result)
 
 
+# Start the 24/7 background monitor (runs in Railway too, where this module
+# is imported by the production server rather than run as __main__)
+start_monitor()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n  Investment Agent → http://localhost:{port}")
     print(f"  Backtester      → http://localhost:{port}/backtest")
-    print(f"  Quant Scanner   → http://localhost:{port}/scanner\n")
+    print(f"  Quant Scanner   → http://localhost:{port}/scanner")
+    print(f"  Signal Monitor  → http://localhost:{port}/signals\n")
     app.run(debug=False, host="0.0.0.0", port=port)

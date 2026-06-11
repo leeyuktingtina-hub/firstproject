@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量化监控信号</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --green: #3fb950; --green-dim: #1a3a24; --cyan: #58a6ff;
+    --red: #f85149; --yellow: #e3b341; --text: #e6edf3; --muted: #8b949e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; background: var(--surface);
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  header h1 span { color: var(--green); }
+  .nav-link {
+    font-size: 12px; color: var(--muted); text-decoration: none;
+    padding: 5px 11px; border: 1px solid var(--border); border-radius: 6px;
+  }
+  .nav-link:hover { color: var(--text); border-color: var(--text); }
+
+  .content { max-width: 800px; margin: 0 auto; padding: 24px 20px; }
+
+  /* Status bar */
+  .status-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .status-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; text-align: center;
+  }
+  .status-val { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .status-lbl { font-size: 11px; color: var(--muted); }
+  .on  { color: var(--green); }
+  .off { color: var(--red); }
+
+  /* Telegram setup card */
+  .tg-card {
+    background: var(--surface); border: 1px solid var(--cyan);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 24px;
+    font-size: 13px; line-height: 1.7;
+  }
+  .tg-card h3 { color: var(--cyan); font-size: 14px; margin-bottom: 10px; }
+  .tg-card code {
+    background: #21262d; border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--yellow);
+  }
+  .tg-card ol { padding-left: 20px; }
+  .tg-card li { margin: 4px 0; color: var(--muted); }
+
+  /* Signal feed */
+  .feed-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+  .signal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .signal-card.BUY_SIGNAL  { border-left: 4px solid var(--green); }
+  .signal-card.SELL_SIGNAL { border-left: 4px solid var(--red); }
+  .signal-card.OVERSOLD    { border-left: 4px solid var(--cyan); }
+  .signal-card.OVERBOUGHT  { border-left: 4px solid var(--yellow); }
+  .sig-emoji { font-size: 22px; }
+  .sig-body  { flex: 1; }
+  .sig-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .sig-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .sig-meta  { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .market-badge {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px;
+  }
+  .market-US { background: #1f3a5f; color: var(--cyan); }
+  .market-HK { background: #3a1f1f; color: #ff7b72; }
+  .market-CN { background: #3a2a1f; color: var(--yellow); }
+
+  #empty-feed { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+  .refresh-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span>📡</span>
+  <h1>量化监控<span>信号</span></h1>
+  <a href="/" class="nav-link">💬 聊天</a>
+  <a href="/scanner" class="nav-link">🔬 扫描</a>
+  <a href="/earnings" class="nav-link">⏱️ 财报</a>
+  <a href="/backtest" class="nav-link">📈 回测</a>
+</header>
+
+<div class="content">
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-card">
+      <div class="status-val" id="st-running">—</div>
+      <div class="status-lbl">监控状态</div>
+    </div>
+    <div class="status-card">
+      <div class="status-val" id="st-last">—</div>
+      <div class="status-lbl">上次扫描</div>
+    </div>
+    <div class="status-card">
+      <div class="status-val" id="st-next">—</div>
+      <div class="status-lbl">下次扫描</div>
+    </div>
+    <div class="status-card">
+      <div class="status-val" id="st-tg">—</div>
+      <div class="status-lbl">Telegram推送</div>
+    </div>
+  </div>
+
+  <!-- Telegram setup (shown when not configured) -->
+  <div class="tg-card" id="tg-setup" style="display:none">
+    <h3>📱 开启手机推送（Telegram，5分钟设置）</h3>
+    <ol>
+      <li>在 Telegram 搜索 <code>@BotFather</code> → 发送 <code>/newbot</code> → 取个名字 → 复制 <b>bot token</b></li>
+      <li>搜索 <code>@userinfobot</code> → 点 Start → 复制你的 <b>chat id</b>（一串数字）</li>
+      <li>在 Railway → Variables 添加两个变量：<br>
+          <code>TELEGRAM_BOT_TOKEN</code> = 你的token<br>
+          <code>TELEGRAM_CHAT_ID</code> = 你的chat id</li>
+      <li>找到你创建的 bot，点 <b>Start</b>，等 Railway 重新部署即可</li>
+    </ol>
+  </div>
+
+  <!-- Signal feed -->
+  <div class="feed-title">📋 信号记录（每 <span id="interval">30</span> 分钟自动扫描 75 只股票）</div>
+  <div id="feed"></div>
+  <div id="empty-feed" style="display:none">
+    还没有信号记录。<br>
+    监控系统会在后台每30分钟扫描一次，<br>
+    当有股票进入买入区、卖出区、RSI超卖/超买时，<br>
+    信号会出现在这里（并推送到Telegram，如已配置）。
+  </div>
+
+  <div class="refresh-note">页面每60秒自动刷新 · 信号检测规则：买入/卖出区切换 · RSI&lt;30超卖 · RSI&gt;75超买</div>
+</div>
+
+<script>
+  async function loadFeed() {
+    try {
+      const res  = await fetch('/api/signals');
+      const data = await res.json();
+
+      document.getElementById('st-running').innerHTML = data.monitor_running
+        ? '<span class="on">● 运行中</span>' : '<span class="off">● 已停止</span>';
+      document.getElementById('st-last').textContent = data.last_scan ? data.last_scan.slice(5, 16) : '等待首次扫描';
+      document.getElementById('st-next').textContent = data.next_scan ? data.next_scan.slice(5, 16) : '—';
+      document.getElementById('st-tg').innerHTML = data.telegram_on
+        ? '<span class="on">✓ 已开启</span>' : '<span class="off">✗ 未配置</span>';
+      document.getElementById('interval').textContent = data.interval_min;
+      document.getElementById('tg-setup').style.display = data.telegram_on ? 'none' : 'block';
+
+      const feed = document.getElementById('feed');
+      const empty = document.getElementById('empty-feed');
+      if (!data.signals || data.signals.length === 0) {
+        feed.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      feed.innerHTML = data.signals.map(s => `
+        <div class="signal-card ${s.type}">
+          <div class="sig-emoji">${s.emoji}</div>
+          <div class="sig-body">
+            <div class="sig-title">${s.title}<span class="market-badge market-${s.market}">${s.market}</span></div>
+            <div class="sig-detail">${s.detail}</div>
+            <div class="sig-meta">${s.time} · ${s.name}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) { /* silent */ }
+  }
+
+  loadFeed();
+  setInterval(loadFeed, 60000);
+</script>
+</body>
+</html>
