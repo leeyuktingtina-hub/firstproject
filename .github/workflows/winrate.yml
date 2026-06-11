@@ -1,5 +1,10 @@
 name: Win-rate replay
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/winrate.yml"
+      - "evaluate_signals.py"
 
 jobs:
   replay:
