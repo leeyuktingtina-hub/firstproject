@@ -29,7 +29,7 @@ from investment_agent import (
 from backtest import run_backtest
 from quant_scanner import run_scan, UNIVERSE
 from earnings_tracker import get_earnings_data, LINKAGE_MAP, TRACKED_STOCKS
-from monitor import start_monitor, get_signal_feed
+from monitor import start_monitor, get_signal_feed, send_bark, send_email, send_telegram, push_channels_status
 
 load_dotenv()
 
@@ -296,6 +296,23 @@ def signals_page():
 @app.route("/api/signals")
 def signals_api():
     return jsonify(get_signal_feed())
+
+
+@app.route("/api/signals/test-push", methods=["POST"])
+def signals_test_push():
+    """Send a test notification to every configured push channel."""
+    channels = push_channels_status()
+    results  = {}
+    if channels["bark"]:
+        results["bark"] = send_bark("✅ 测试推送", "量化监控推送配置成功！之后有买卖信号会推送到这里。")
+    if channels["email"]:
+        results["email"] = send_email("✅ 量化监控测试推送", "推送配置成功！之后有买卖信号会发送到这个邮箱。")
+    if channels["telegram"]:
+        results["telegram"] = send_telegram("✅ <b>测试推送</b>\n量化监控推送配置成功！")
+    if not results:
+        return jsonify({"ok": False, "message": "没有配置任何推送渠道（BARK_KEY / SMTP_EMAIL / TELEGRAM）"}), 400
+    ok = any(results.values())
+    return jsonify({"ok": ok, "results": results})
 
 
 @app.route("/earnings")

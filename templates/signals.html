@@ -117,6 +117,15 @@
     </div>
   </div>
 
+  <div style="text-align:center;margin:-8px 0 24px;">
+    <button id="test-push-btn" onclick="testPush()" style="
+      background:var(--green-dim); color:var(--green); border:1px solid var(--green);
+      padding:8px 18px; border-radius:8px; font-size:13px; cursor:pointer;">
+      📲 发送测试推送
+    </button>
+    <div id="test-push-result" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
+  </div>
+
   <!-- Push setup (shown when not configured) -->
   <div class="tg-card" id="tg-setup" style="display:none">
     <h3>📱 开启推送通知（三选一即可）</h3>
@@ -187,6 +196,25 @@
         </div>
       `).join('');
     } catch(e) { /* silent */ }
+  }
+
+  async function testPush() {
+    const btn = document.getElementById('test-push-btn');
+    const out = document.getElementById('test-push-result');
+    btn.disabled = true; out.textContent = '发送中…';
+    try {
+      const res  = await fetch('/api/signals/test-push', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        const sent = Object.entries(data.results).filter(([,v]) => v).map(([k]) => k).join(', ');
+        out.innerHTML = `<span style="color:var(--green)">✓ 已发送（${sent}），请查看手机/邮箱</span>`;
+      } else {
+        out.innerHTML = `<span style="color:var(--red)">✗ ${data.message || '发送失败，检查配置'}</span>`;
+      }
+    } catch(e) {
+      out.innerHTML = '<span style="color:var(--red)">✗ 请求失败</span>';
+    }
+    btn.disabled = false;
   }
 
   loadFeed();
